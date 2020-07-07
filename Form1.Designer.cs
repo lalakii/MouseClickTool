@@ -38,6 +38,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.is_ms = new System.Windows.Forms.TextBox();
             this.is_begin = new System.Windows.Forms.Button();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -105,6 +106,7 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.comboBox1);
             this.groupBox3.Controls.Add(this.label4);
             this.groupBox3.Controls.Add(this.is_ms);
             this.groupBox3.Controls.Add(this.is_begin);
@@ -144,6 +146,18 @@
             this.is_begin.UseVisualStyleBackColor = true;
             this.is_begin.Click += new System.EventHandler(this.is_begin_Click);
             // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "左键",
+            "右键"});
+            this.comboBox1.Location = new System.Drawing.Point(257, 47);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(121, 23);
+            this.comboBox1.TabIndex = 4;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -176,6 +190,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox is_ms;
         private System.Windows.Forms.Button is_begin;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }
 

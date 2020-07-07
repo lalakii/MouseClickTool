@@ -10,18 +10,25 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MouseClickTool
-{
+{/// <summary>
+/// 怎么简单怎么来了
+/// </summary>
     public partial class Form1 : Form
     {
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, IntPtr dwExtraInfo);
 
-        // private const uint RightDown = 0x0008;
-        // private const uint RightUp = 0x0010;
+        private const uint RightDown = 0x0008;
+        private const uint RightUp = 0x0010;
         private const uint LeftDown = 0x0002;
         private const uint LeftUp = 0x0004;
 
         public static void SendRightClick(uint posX, uint posY)
+        {
+            mouse_event(RightDown, posX, posY, 0, new System.IntPtr());
+            mouse_event(RightUp, posX, posY, 0, new System.IntPtr());
+        }
+        public static void SendLeftClick(uint posX, uint posY)
         {
             mouse_event(LeftDown, posX, posY, 0, new System.IntPtr());
             mouse_event(LeftUp, posX, posY, 0, new System.IntPtr());
@@ -29,6 +36,7 @@ namespace MouseClickTool
         public Form1()
         {
             InitializeComponent();
+            this.comboBox1.SelectedIndex = 0;
         }
 
         private void is_begin_Click(object sender, EventArgs e)
@@ -54,15 +62,31 @@ namespace MouseClickTool
                          }
                      });
                      is_begin.Text = string.Format("停止");
-                     for (; ; )
+                     if (this.comboBox1.SelectedIndex == 0)
                      {
-                         await Task.Run(() =>
+                         for (; ; )
                          {
-                             uint x = (uint)Cursor.Position.X;
-                             uint y = (uint)Cursor.Position.Y;
-                             SendRightClick(x, y);
-                             Thread.Sleep(result);
-                         });
+                             await Task.Run(() =>
+                             {
+                                 uint x = (uint)Cursor.Position.X;
+                                 uint y = (uint)Cursor.Position.Y;
+                                 SendLeftClick(x, y);
+                                 Thread.Sleep(result);
+                             });
+                         }
+                     }
+                     else
+                     {
+                         for (; ; )
+                         {
+                             await Task.Run(() =>
+                             {
+                                 uint x = (uint)Cursor.Position.X;
+                                 uint y = (uint)Cursor.Position.Y;
+                                 SendRightClick(x, y);
+                                 Thread.Sleep(result);
+                             });
+                         }
                      }
 
                  });
