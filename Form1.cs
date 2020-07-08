@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,24 +16,77 @@ namespace MouseClickTool
 /// </summary>
     public partial class Form1 : Form
     {
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, IntPtr dwExtraInfo);
-
-        private const uint RightDown = 0x0008;
-        private const uint RightUp = 0x0010;
-        private const uint LeftDown = 0x0002;
-        private const uint LeftUp = 0x0004;
-
-        public static void SendRightClick(uint posX, uint posY)
+        //新方法：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
+        internal class MouseSimulator
         {
-            mouse_event(RightDown, posX, posY, 0, new System.IntPtr());
-            mouse_event(RightUp, posX, posY, 0, new System.IntPtr());
+            [DllImport("user32.dll", SetLastError = true)]
+            static extern uint SendInput(uint nInputs, ref INPUT pInputs, int cbSize);
+
+            [StructLayout(LayoutKind.Sequential)]
+            struct INPUT
+            {
+                public SendInputEventType type;
+                public MouseKeybdhardwareInputUnion mkhi;
+            }
+
+            [StructLayout(LayoutKind.Explicit)]
+            struct MouseKeybdhardwareInputUnion
+            {
+                [FieldOffset(0)]
+                public MouseInputData mi;
+            }
+
+            [Flags]
+            enum MouseEventFlags : uint
+            {
+                MOUSEEVENTF_LEFTDOWN = 0x0002,
+                MOUSEEVENTF_LEFTUP = 0x0004,
+                MOUSEEVENTF_RIGHTDOWN = 0x0008,
+                MOUSEEVENTF_RIGHTUP = 0x0010,
+            }
+
+            [StructLayout(LayoutKind.Sequential)]
+            struct MouseInputData
+            {
+                public int dx;
+                public int dy;
+                public uint mouseData;
+                public MouseEventFlags dwFlags;
+                public uint time;
+                public IntPtr dwExtraInfo;
+            }
+            enum SendInputEventType : int
+            {
+                InputMouse
+            }
+
+            public static void ClickLeftMouseButton()
+            {
+                INPUT mouseDownInput = new INPUT();
+                mouseDownInput.type = SendInputEventType.InputMouse;
+                mouseDownInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_LEFTDOWN;
+                SendInput(1, ref mouseDownInput, Marshal.SizeOf(new INPUT()));
+
+                INPUT mouseUpInput = new INPUT();
+                mouseUpInput.type = SendInputEventType.InputMouse;
+                mouseUpInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_LEFTUP;
+                SendInput(1, ref mouseUpInput, Marshal.SizeOf(new INPUT()));
+            }
+
+            public static void ClickRightMouseButton()
+            {
+                INPUT mouseDownInput = new INPUT();
+                mouseDownInput.type = SendInputEventType.InputMouse;
+                mouseDownInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_RIGHTDOWN;
+                SendInput(1, ref mouseDownInput, Marshal.SizeOf(new INPUT()));
+
+                INPUT mouseUpInput = new INPUT();
+                mouseUpInput.type = SendInputEventType.InputMouse;
+                mouseUpInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_RIGHTUP;
+                SendInput(1, ref mouseUpInput, Marshal.SizeOf(new INPUT()));
+            }
         }
-        public static void SendLeftClick(uint posX, uint posY)
-        {
-            mouse_event(LeftDown, posX, posY, 0, new System.IntPtr());
-            mouse_event(LeftUp, posX, posY, 0, new System.IntPtr());
-        }
+
         public Form1()
         {
             InitializeComponent();
@@ -70,7 +124,7 @@ namespace MouseClickTool
                              {
                                  uint x = (uint)Cursor.Position.X;
                                  uint y = (uint)Cursor.Position.Y;
-                                 SendLeftClick(x, y);
+                                 MouseSimulator.ClickLeftMouseButton();
                                  Thread.Sleep(result);
                              });
                          }
@@ -83,7 +137,7 @@ namespace MouseClickTool
                              {
                                  uint x = (uint)Cursor.Position.X;
                                  uint y = (uint)Cursor.Position.Y;
-                                 SendRightClick(x, y);
+                                 MouseSimulator.ClickRightMouseButton();
                                  Thread.Sleep(result);
                              });
                          }
