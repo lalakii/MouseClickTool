@@ -55,6 +55,7 @@ namespace MouseClickTool
                 public uint time;
                 public IntPtr dwExtraInfo;
             }
+
             enum SendInputEventType : int
             {
                 InputMouse
@@ -91,6 +92,7 @@ namespace MouseClickTool
         {
             InitializeComponent();
             this.comboBox1.SelectedIndex = 0;
+            this.MaximizeBox = false;
         }
 
         private void is_begin_Click(object sender, EventArgs e)
@@ -122,8 +124,6 @@ namespace MouseClickTool
                          {
                              await Task.Run(() =>
                              {
-                                 uint x = (uint)Cursor.Position.X;
-                                 uint y = (uint)Cursor.Position.Y;
                                  MouseSimulator.ClickLeftMouseButton();
                                  Thread.Sleep(result);
                              });
@@ -135,8 +135,6 @@ namespace MouseClickTool
                          {
                              await Task.Run(() =>
                              {
-                                 uint x = (uint)Cursor.Position.X;
-                                 uint y = (uint)Cursor.Position.Y;
                                  MouseSimulator.ClickRightMouseButton();
                                  Thread.Sleep(result);
                              });
