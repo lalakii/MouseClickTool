@@ -1,3 +1,5 @@
+[![Windows .exe program](https://raster.shields.io/badge/Windows%20.exe-program-blue.png)](https://ru.wikipedia.org/wiki/.EXE)
+
 # MouseClickTool
 
 简单好用的鼠标连点器，因为玩游戏需要连点，在网上找了好多连点器，有的居然还要收费，一向穷苦的我感觉为此花钱很不值得，索性自己写了个。。。
