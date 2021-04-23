@@ -14,6 +14,6 @@
 
 ## 下载
 
-[本地下载](https://github.com/iamverylovely/MouseClickTool/releases/download/1.2/MouseClickTool-x64.zip)
+[本地下载](https://github.com/iamverylovely/MouseClickTool/releases/download/1.3/MouseClickTool_Win_X64.zip)
 
-[备用下载](https://iamverylovely.com/opensource/MouseClickTool-x64.zip?v=1.2)
+[备用下载](https://iamverylovely.com/opensource/MouseClickTool_Win_X64.zip?v=1.3)

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("iamverylovely")]
 [assembly: AssemblyProduct("MouseClickTool")]
-[assembly: AssemblyCopyright("Copyright ©  2020 iamverylovely")]
+[assembly: AssemblyCopyright("Copyright © 2020 iamverylovely")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

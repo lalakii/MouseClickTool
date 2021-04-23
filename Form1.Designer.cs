@@ -35,10 +35,10 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.is_ms = new System.Windows.Forms.TextBox();
             this.is_begin = new System.Windows.Forms.Button();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -62,9 +62,9 @@
             this.label3.ForeColor = System.Drawing.SystemColors.HotTrack;
             this.label3.Location = new System.Drawing.Point(328, 32);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(383, 15);
+            this.label3.Size = new System.Drawing.Size(367, 15);
             this.label3.TabIndex = 2;
-            this.label3.Text = "https://github.com/iamverylovely/MouseClickTool";
+            this.label3.Text = "https://github.com/iamverycute/MouseClickTool";
             // 
             // label2
             // 
@@ -117,6 +117,18 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "功能";
             // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "左键",
+            "右键"});
+            this.comboBox1.Location = new System.Drawing.Point(257, 47);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(121, 23);
+            this.comboBox1.TabIndex = 4;
+            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -144,19 +156,6 @@
             this.is_begin.TabIndex = 0;
             this.is_begin.Text = "开始";
             this.is_begin.UseVisualStyleBackColor = true;
-            this.is_begin.Click += new System.EventHandler(this.is_begin_Click);
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "左键",
-            "右键"});
-            this.comboBox1.Location = new System.Drawing.Point(257, 47);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 23);
-            this.comboBox1.TabIndex = 4;
             // 
             // Form1
             // 
@@ -166,6 +165,8 @@
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
+            this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "鼠标连点器";
             this.groupBox1.ResumeLayout(false);
