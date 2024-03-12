@@ -1,0 +1,4 @@
+﻿# ignore
+bin/
+.vs/
+obj/
