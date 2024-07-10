@@ -1,0 +1,5 @@
+﻿# ignore
+bin/
+.vs/
+obj/
+main.resx
