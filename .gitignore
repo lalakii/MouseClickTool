@@ -1,0 +1,6 @@
+﻿# ignore
+bin/
+.vs/
+obj/
+main.resx
+MouseClickTool.csproj.user
