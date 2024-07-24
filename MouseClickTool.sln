@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34408.163
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseClickTool", "MouseClickTool.csproj", "{64FA4132-AC70-4006-9495-F974EE2DD808}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Default|Windows = Default|Windows
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64FA4132-AC70-4006-9495-F974EE2DD808}.Default|Windows.ActiveCfg = Default|x64
+		{64FA4132-AC70-4006-9495-F974EE2DD808}.Default|Windows.Build.0 = Default|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E084C909-99EC-4CA3-A898-31D8F2905EB7}
+	EndGlobalSection
+EndGlobal
