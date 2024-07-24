@@ -39,7 +39,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Label();
-            this.btnMin = new System.Windows.Forms.Label();
+            this.btnHide = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.SuspendLayout();
@@ -166,15 +166,15 @@
             this.btnClose.TabIndex = 3;
             this.btnClose.Text = "×";
             // 
-            // btnMin
+            // btnHide
             // 
-            this.btnMin.AutoSize = true;
-            this.btnMin.Font = new System.Drawing.Font("宋体", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.btnMin.Location = new System.Drawing.Point(270, 16);
-            this.btnMin.Name = "btnMin";
-            this.btnMin.Size = new System.Drawing.Size(37, 40);
-            this.btnMin.TabIndex = 5;
-            this.btnMin.Text = "-";
+            this.btnHide.AutoSize = true;
+            this.btnHide.Font = new System.Drawing.Font("宋体", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.btnHide.Location = new System.Drawing.Point(270, 16);
+            this.btnHide.Name = "btnHide";
+            this.btnHide.Size = new System.Drawing.Size(37, 40);
+            this.btnHide.TabIndex = 5;
+            this.btnHide.Text = "-";
             // 
             // MouseClickTool
             // 
@@ -183,7 +183,7 @@
             this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(358, 243);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.btnMin);
+            this.Controls.Add(this.btnHide);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.groupBox3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -210,7 +210,7 @@
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.ComboBox clickType;
         private System.Windows.Forms.Label btnClose;
-        private System.Windows.Forms.Label btnMin;
+        private System.Windows.Forms.Label btnHide;
         private System.Windows.Forms.ComboBox hotkeys;
         private System.Windows.Forms.Label label3;
     }

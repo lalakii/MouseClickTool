@@ -11,6 +11,7 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{64FA4132-AC70-4006-9495-F974EE2DD808}.Default|Windows.ActiveCfg = Default|x64
+		{64FA4132-AC70-4006-9495-F974EE2DD808}.Default|Windows.Build.0 = Default|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,6 +2,7 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <LangVersion>preview</LangVersion>
     <ProjectGuid>{64FA4132-AC70-4006-9495-F974EE2DD808}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>def</RootNamespace>
@@ -28,9 +29,9 @@
     <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Default|x64' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <OutputPath>obj\</OutputPath>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>5</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <ErrorReport>none</ErrorReport>
     <FileAlignment>512</FileAlignment>
@@ -42,6 +43,7 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <DebugType>none</DebugType>
     <UseWinFormsOutOfProcDesigner>False</UseWinFormsOutOfProcDesigner>
+    <NoWarn>IDE0039;S2486;S108</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

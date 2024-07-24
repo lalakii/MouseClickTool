@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -6,8 +7,8 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-[assembly: AssemblyVersion("1.7.0.2")]
-[assembly: AssemblyFileVersion("1.7.0.2")]
+[assembly: AssemblyVersion("1.7.0.3")]
+[assembly: AssemblyFileVersion("1.7.0.3")]
 [assembly: AssemblyTitle("MouseClickTool")]
 [assembly: AssemblyProduct("MouseClickTool")]
 [assembly: AssemblyCopyright("Copyright (C) 2024 lalaki.cn")]
@@ -22,13 +23,11 @@ namespace def
         private bool running = false;
         private const int waitSeconds = 3;
         private const int hotkeyId = 0x233;
+        private TaskCompletionSource<int> source;
         private readonly string[] config = { "F1", "1000", "0" };
 
         [DllImport("user32.dll")]
         private static extern bool SetProcessDPIAware();
-
-        [DllImport("shell32.dll")]
-        private static extern int ShellExecute(int hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
 
         //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
         [DllImport("user32.dll")]
@@ -88,7 +87,7 @@ namespace def
             btnStart.Text = (running ? "停止" : "开始") + "(" + config[0] + ")";
         }
 
-        private MouseClickTool()
+        public MouseClickTool()
         {
             InitializeComponent();
             var configFile = Path.Combine(Path.GetTempPath(), "lalaki_mouse_click_tool.ini");
@@ -119,7 +118,7 @@ namespace def
             delayVal.Text = config[1];
             int.TryParse(config[2], out int clickTypeIndex);
             clickType.SelectedIndex = clickTypeIndex;
-            btnUrl.Click += (__, _) => ShellExecute(0, "open", btnUrl.Text, "", "", 1);
+            btnUrl.Click += (__, _) => Process.Start(btnUrl.Text);
             btnClose.Click += (__, _) =>
             {
                 Hide();
@@ -127,14 +126,15 @@ namespace def
                 Application.Exit();
             };
             FormClosing += (__, _) => File.WriteAllLines(configFile, config);
-            btnMin.Click += (__, _) => WindowState = FormWindowState.Minimized;
+            btnHide.Click += (__, _) => WindowState = FormWindowState.Minimized;
             btnClose.MouseHover += (__, _) => btnClose.ForeColor = Color.IndianRed;
-            btnClose.MouseLeave += (__, _) => btnClose.ForeColor = Control.DefaultForeColor;
-            btnMin.MouseHover += (__, _) => btnMin.ForeColor = Color.DodgerBlue;
-            btnMin.MouseLeave += (__, _) => btnMin.ForeColor = Control.DefaultForeColor;
+            btnHide.MouseHover += (__, _) => btnHide.ForeColor = Color.MediumPurple;
+            EventHandler leave = delegate (object o, EventArgs __) { ((Control)o).ForeColor = DefaultForeColor; };
+            btnHide.MouseLeave += leave;
+            btnClose.MouseLeave += leave;
             Resize += (_, __) => WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
             MouseUp += (_, __) => Cursor = Cursors.Default;
-            MouseDown += (_, e) => Tag = (e.Button == MouseButtons.Left) ? (object)e.Location : null;
+            MouseDown += (_, e) => Tag = (e.Button == MouseButtons.Left) ? e.Location : null;
             MouseMove += (_, e) =>
             {
                 if (e.Button == MouseButtons.Left && Tag is Point offset)
@@ -164,14 +164,11 @@ namespace def
                         btnStart.Enabled = clickType.Enabled = false;
                         Task.Run(async () =>
                         {
-                            await Task.Run(async () =>
+                            for (int i = 1; i < waitSeconds; i++)
                             {
-                                for (int i = 1; i < waitSeconds; i++)
-                                {
-                                    btnStart.Text = string.Format("{0}", waitSeconds - i);
-                                    await Task.Delay(1000);
-                                }
-                            });
+                                btnStart.Text = string.Format("{0}", waitSeconds - i);
+                                await Task.Delay(1000);
+                            }
                             btnStart.Enabled = true;
                             UpdateBtnStartText();
                             var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
@@ -182,6 +179,7 @@ namespace def
                                 upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
                             }
                             var size = Marshal.SizeOf(input);
+                            source = new TaskCompletionSource<int>();
                             while (running)
                             {
                                 await Task.Run(async () =>
@@ -192,7 +190,7 @@ namespace def
                                     SendInput(1, ref input, size);
                                     if (delay != 0)
                                     {
-                                        await Task.Delay(delay);
+                                        await Task.WhenAny(Task.Delay(delay), source.Task);
                                     }
                                 });
                             }
@@ -200,9 +198,9 @@ namespace def
                             {
                                 await Task.Delay(1000);
                             }
-                            clickType.Enabled = true;
-                            delayVal.ReadOnly = false;
                             UpdateBtnStartText();
+                            delayVal.ReadOnly = false;
+                            btnStart.Enabled = clickType.Enabled = true;
                         });
                     }
                     else
@@ -212,7 +210,14 @@ namespace def
                 }
                 else
                 {
-                    running = false;
+                    btnStart.Enabled = running = false;
+                    try
+                    {
+                        source.SetCanceled();
+                    }
+                    catch
+                    {
+                    }
                 }
             };
         }
