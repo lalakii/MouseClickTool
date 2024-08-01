@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
@@ -7,227 +6,294 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-[assembly: AssemblyVersion("1.7.0.3")]
-[assembly: AssemblyFileVersion("1.7.0.3")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
 [assembly: AssemblyTitle("MouseClickTool")]
 [assembly: AssemblyProduct("MouseClickTool")]
 [assembly: AssemblyCopyright("Copyright (C) 2024 lalaki.cn")]
 
-namespace def
-{   /// <summary>
-    /// 怎么简单怎么来了
-    /// </summary>
-    public partial class MouseClickTool : Form
+[System.ComponentModel.DesignerCategory("")]
+public class MouseClickTool : Form
+{
+    private Input input;
+    private bool running = false;
+    private TaskCompletionSource<int> source;
+    private readonly string[] cfg = ["F1", "1000", "0"];
+    private readonly Button bs = new() { AutoSize = true, TextAlign = ContentAlignment.MiddleCenter };
+    private readonly string title = "MouseClickTool" + (Environment.Is64BitProcess ? " x64" : " x86");
+    private readonly bool cn = System.Globalization.CultureInfo.InstalledUICulture.Name.ToLower().Contains("zh-");
+
+    [DllImport("user32.dll")]
+    private static extern bool SetProcessDPIAware();
+
+    [DllImport("user32.dll")]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    [DllImport("user32.dll")]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
+    [DllImport("user32.dll")]
+    private static extern uint SendInput(uint nInputs, ref Input pInputs, int cbSize);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Input
     {
-        private Input input;
-        private bool running = false;
-        private const int waitSeconds = 3;
-        private const int hotkeyId = 0x233;
-        private TaskCompletionSource<int> source;
-        private readonly string[] config = { "F1", "1000", "0" };
+        public int type;
+        public MouseKeybdhardwareInputUnion mkhi;
+    }
 
-        [DllImport("user32.dll")]
-        private static extern bool SetProcessDPIAware();
+    [StructLayout(LayoutKind.Explicit)]
+    private struct MouseKeybdhardwareInputUnion
+    {
+        [FieldOffset(0)]
+        public MouseInput mi;
+    }
 
-        //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
-        [DllImport("user32.dll")]
-        private static extern uint SendInput(uint nInputs, ref Input pInputs, int cbSize);
+    [Flags]
+    private enum MouseEventFlag : uint
+    {
+        MOUSEEVENTF_LEFTDOWN = 0x0002,
+        MOUSEEVENTF_LEFTUP = 0x0004,
+        MOUSEEVENTF_RIGHTDOWN = 0x0008,
+        MOUSEEVENTF_RIGHTUP = 0x0010,
+    }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Input
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MouseInput
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public MouseEventFlag dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    protected override CreateParams CreateParams
+    {
+        get
         {
-            public int type;
-            public MouseKeybdhardwareInputUnion mkhi;
+            var cp = base.CreateParams;
+            cp.Style &= 0x800000 | 0x20000;
+            return cp;
         }
+    }
 
-        [StructLayout(LayoutKind.Explicit)]
-        private struct MouseKeybdhardwareInputUnion
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == 0x00A3) { return; }
+        base.WndProc(ref m);
+        if (m.Msg == 0x0312)
         {
-            [FieldOffset(0)]
-            public MouseInput mi;
+            bs.PerformClick();
         }
-
-        [Flags]
-        private enum MouseEventFlag : uint
+        else if (m.Msg == 0x84)
         {
-            MOUSEEVENTF_LEFTDOWN = 0x0002,
-            MOUSEEVENTF_LEFTUP = 0x0004,
-            MOUSEEVENTF_RIGHTDOWN = 0x0008,
-            MOUSEEVENTF_RIGHTUP = 0x0010,
+            m.Result = (IntPtr)0x2;
         }
+    }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MouseInput
+    private void UpdateText()
+    {
+        bs.Text = (running ? (cn ? "停止" : "Stop") : (cn ? "开始" : "Start")) + "(" + cfg[0] + ")";
+        bs.Enabled = true;
+    }
+
+    private int GetDiffHeight(int height1, int height2)
+    {
+        return Math.Abs(height1 - height2) / 2;
+    }
+
+    public MouseClickTool()
+    {
+        //CreateWindow and Controls
+        Text = title;
+        BackColor = Color.GhostWhite;
+        StartPosition = FormStartPosition.CenterScreen;
+        Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, hkl = new()
         {
-            public int dx;
-            public int dy;
-            public uint mouseData;
-            public MouseEventFlag dwFlags;
-            public uint time;
-            public unsafe ulong* dwExtraInfo;
-        }
-
-        [DllImport("user32.dll")]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
-
-        [DllImport("user32.dll")]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-        protected override void WndProc(ref Message m)
+            Text = cn ? "快捷键(hotkey):" : "Hotkey(temp):",
+            TextAlign = ContentAlignment.BottomCenter,
+            AutoSize = true
+        }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new Font("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new Font(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font };
+        ComboBox ct = new() { DropDownStyle = ComboBoxStyle.DropDownList }, hk = new() { DropDownStyle = ct.DropDownStyle };
+        TextBox dv = new();
+        Controls.AddRange([ct, hk, dv, dvl, hkl, bs, bc, bm, bh]);
+        foreach (Control c in Controls)
         {
-            if (m.Msg == 0x0312 && (int)m.WParam == hotkeyId)
+            if (c.BackColor != bc.BackColor)
             {
-                btnStart.PerformClick();
+                c.Font = new Font("Segoe UI", c.Font.Size);
             }
-            base.WndProc(ref m);
         }
-
-        private void UpdateBtnStartText()
+        ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right"]);
+        for (int i = 1; i < 13; i++)
         {
-            btnStart.Text = (running ? "停止" : "开始") + "(" + config[0] + ")";
+            hk.Items.Add("F" + i);
         }
-
-        public MouseClickTool()
+        //InitEvents
+        hk.SelectedIndexChanged += (_, __) =>
         {
-            InitializeComponent();
-            var configFile = Path.Combine(Path.GetTempPath(), "lalaki_mouse_click_tool.ini");
-            if (File.Exists(configFile))
+            int hotkeyId = 0x233;
+            UnregisterHotKey(Handle, hotkeyId);
+            Enum.TryParse(hk.Text, out Keys key);
+            RegisterHotKey(Handle, hotkeyId, 0x4000, (uint)key);
+            var keyStr = key.ToString();
+            cfg[0] = keyStr;
+            UpdateText();
+        };
+        dv.TextChanged += (_, __) => cfg[1] = dv.Text;
+        ct.SelectedIndexChanged += (_, __) => cfg[2] = ct.SelectedIndex.ToString();
+        bc.MouseEnter += (_, __) => bc.ForeColor = Color.IndianRed;
+        bc.MouseLeave += (_, __) => bc.ForeColor = Color.Black;
+        bc.Click += (_, __) => { running = false; Hide(); Application.Exit(); };
+        bm.MouseEnter += (_, __) => bm.ForeColor = Color.MediumPurple;
+        bm.MouseLeave += (_, __) => bm.ForeColor = Color.Black;
+        bm.Click += (_, __) => WindowState = FormWindowState.Minimized;
+        bh.MouseEnter += (_, __) => bh.ForeColor = Color.DodgerBlue;
+        bh.MouseLeave += (_, __) => bh.ForeColor = Color.Black;
+        bh.Click += (_, __) => System.Diagnostics.Process.Start("https://github.com/lalakii/MouseClickTool");
+        bs.Click += (__, _) =>
+        {
+            if (!running && ct.Enabled)
             {
-                var tempConfig = File.ReadAllLines(configFile);
-                if (tempConfig.Length > 2)
+                if (int.TryParse(dv.Text, out int delay) && delay > -1)
                 {
-                    config = tempConfig;
-                }
-            }
-            for (int i = 1; i < 13; i++)
-            {
-                hotkeys.Items.Add("F" + i);
-            }
-            hotkeys.SelectedIndexChanged += (_, __) =>
-             {
-                 UnregisterHotKey(Handle, hotkeyId);
-                 Enum.TryParse(hotkeys.Text, out Keys key);
-                 RegisterHotKey(Handle, hotkeyId, 0x4000, (uint)key);
-                 var keyStr = key.ToString();
-                 config[0] = keyStr;
-                 UpdateBtnStartText();
-             };
-            delayVal.TextChanged += (_, __) => config[1] = delayVal.Text;
-            clickType.SelectedIndexChanged += (_, __) => config[2] = clickType.SelectedIndex == 0 ? "0" : "1";
-            hotkeys.SelectedItem = config[0];
-            delayVal.Text = config[1];
-            int.TryParse(config[2], out int clickTypeIndex);
-            clickType.SelectedIndex = clickTypeIndex;
-            btnUrl.Click += (__, _) => Process.Start(btnUrl.Text);
-            btnClose.Click += (__, _) =>
-            {
-                Hide();
-                running = false;
-                Application.Exit();
-            };
-            FormClosing += (__, _) => File.WriteAllLines(configFile, config);
-            btnHide.Click += (__, _) => WindowState = FormWindowState.Minimized;
-            btnClose.MouseHover += (__, _) => btnClose.ForeColor = Color.IndianRed;
-            btnHide.MouseHover += (__, _) => btnHide.ForeColor = Color.MediumPurple;
-            EventHandler leave = delegate (object o, EventArgs __) { ((Control)o).ForeColor = DefaultForeColor; };
-            btnHide.MouseLeave += leave;
-            btnClose.MouseLeave += leave;
-            Resize += (_, __) => WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
-            MouseUp += (_, __) => Cursor = Cursors.Default;
-            MouseDown += (_, e) => Tag = (e.Button == MouseButtons.Left) ? e.Location : null;
-            MouseMove += (_, e) =>
-            {
-                if (e.Button == MouseButtons.Left && Tag is Point offset)
-                {
-                    Cursor = Cursors.SizeAll;
-                    var location = PointToScreen(e.Location);
-                    location.Offset(-offset.X, -offset.Y);
-                    Location = location;
-                }
-            };
-            Paint += (_, e) =>
-            {
-                var g = e.Graphics;
-                using (var pen = new Pen(Color.MediumPurple, 7f))
-                    g.DrawLine(pen, Width, 0, 0, 0);
-                using (var border = new Pen(Color.FromArgb(60, 0, 0, 0)))
-                    g.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
-                g.DrawString(Text, new Font("Consolas", 16f), Brushes.DimGray, 15, 20);
-            };
-            btnStart.Click += (__, _) =>
-            {
-                if (!running && clickType.Enabled)
-                {
-                    if (int.TryParse(delayVal.Text, out int delay) && delay > -1)
+                    dv.ReadOnly = running = true;
+                    bs.Enabled = ct.Enabled = false;
+                    Task.Run(async () =>
                     {
-                        delayVal.ReadOnly = running = true;
-                        btnStart.Enabled = clickType.Enabled = false;
-                        Task.Run(async () =>
+                        int waitSeconds = 3;
+                        for (int i = 1; i < waitSeconds; i++)
                         {
-                            for (int i = 1; i < waitSeconds; i++)
-                            {
-                                btnStart.Text = string.Format("{0}", waitSeconds - i);
-                                await Task.Delay(1000);
-                            }
-                            btnStart.Enabled = true;
-                            UpdateBtnStartText();
-                            var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
-                            var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
-                            if (clickType.SelectedIndex == 1)
+                            Invoke(() => bs.Text = string.Format("{0}", waitSeconds - i));
+                            await Task.Delay(1000);
+                        }
+                        var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                        var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                        Invoke(() =>
+                        {
+                            UpdateText();
+                            if (ct.SelectedIndex == 1)
                             {
                                 downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
                                 upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
                             }
-                            var size = Marshal.SizeOf(input);
-                            source = new TaskCompletionSource<int>();
-                            while (running)
-                            {
-                                await Task.Run(async () =>
-                                {
-                                    input.mkhi.mi.dwFlags = downFlag;
-                                    SendInput(1, ref input, size);
-                                    input.mkhi.mi.dwFlags = upFlag;
-                                    SendInput(1, ref input, size);
-                                    if (delay != 0)
-                                    {
-                                        await Task.WhenAny(Task.Delay(delay), source.Task);
-                                    }
-                                });
-                            }
-                            if (delay == 0)
-                            {
-                                await Task.Delay(1000);
-                            }
-                            UpdateBtnStartText();
-                            delayVal.ReadOnly = false;
-                            btnStart.Enabled = clickType.Enabled = true;
                         });
-                    }
-                    else
-                    {
-                        MessageBox.Show("鼠标点击间隔，必须是等于或大于0的整数", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                        source = new TaskCompletionSource<int>();
+                        var size = Marshal.SizeOf(input);
+                        while (running)
+                        {
+                            await Task.Run(async () =>
+                            {
+                                input.mkhi.mi.dwFlags = downFlag;
+                                SendInput(1, ref input, size);
+                                input.mkhi.mi.dwFlags = upFlag;
+                                SendInput(1, ref input, size);
+                                if (delay != 0)
+                                {
+                                    await Task.WhenAny(Task.Delay(delay), source.Task);
+                                }
+                            });
+                        }
+                        source = null;
+                        if (delay == 0)
+                        {
+                            await Task.Delay(1000);
+                        }
+                        Invoke(() =>
+                        {
+                            UpdateText();
+                            dv.ReadOnly = false;
+                            ct.Enabled = true;
+                        });
+                    });
                 }
                 else
                 {
-                    btnStart.Enabled = running = false;
-                    try
-                    {
-                        source.SetCanceled();
-                    }
-                    catch
-                    {
-                    }
+                    MessageBox.Show(cn ? "鼠标点击间隔必须是一个自然数" : "Mouse click intervals must be natural numbers!", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            };
-        }
-
-        [STAThread]
-        public static void Main()
+            }
+            else
+            {
+                bs.Enabled = running = false;
+                if (source != null && !source.Task.IsCompleted)
+                {
+                    source.SetCanceled();
+                }
+            }
+        };
+        Paint += (_, e) =>
         {
-            SetProcessDPIAware();
-            Application.EnableVisualStyles();
-            Application.Run(new MouseClickTool());
+            var g = e.Graphics;
+            g.DrawString(title, new Font("Candara", 12f), Brushes.Black, 5, 7);
+            using (var p0 = new Pen(Color.MediumPurple, 7f))
+                g.DrawLine(p0, Width, 0, 0, 0);
+            using var p1 = new Pen(Color.FromArgb(60, 0, 0, 0));
+            g.DrawRectangle(p1, 5, dvl.Top - 5, Width - 12, Height - dvl.Top);
+            if (WindowState == FormWindowState.Maximized)
+            {
+                WindowState = FormWindowState.Normal;
+            }
+        };
+        Load += (_, _) =>
+        {
+            //InitLayout
+            hk.Width = dv.Width = (int)DefaultFont.Size * 6;
+            if (dvl.Width > hkl.Width)
+            {
+                dvl.Left = 8;
+                hkl.Left = dvl.Left + dvl.Width - hkl.Width;
+            }
+            else
+            {
+                hkl.Left = 8;
+                dvl.Left = hkl.Left + hkl.Width - dvl.Width;
+            }
+            int ft = 6;
+            dvl.Top = bc.Height;
+            dv.Left = dvl.Left + dvl.Width + ft;
+            ct.Left = dv.Left + dv.Width + ft;
+            ct.Top = dvl.Top - GetDiffHeight(ct.Height, dv.Height);
+            dv.Top = dvl.Top - GetDiffHeight(dv.Height, ct.Height);
+            hkl.Top = dvl.Top + dvl.Height + 8;
+            hk.Left = dv.Left;
+            hk.Top = hkl.Top - GetDiffHeight(hk.Height, hkl.Height);
+            bs.Left = ct.Left;
+            bs.Width = (int)(hk.Width * 2.1);
+            bs.Top = hk.Top - GetDiffHeight(bs.Height, hk.Height);
+            ct.Width = bs.Width;
+            Width = bs.Left + bs.Width + dvl.Left;
+            Height = bs.Top + bs.Height + ft;
+            bc.Left = Width - bc.Width;
+            bm.Left = bc.Left - bc.Width;
+            bm.Top = (bc.Height - bm.Height) / 2;
+            bh.Left = bm.Left - bc.Width - 3;
+        };
+        //LoadCfg
+        var fCfg = Path.Combine(Path.GetTempPath(), "lalaki_mouse_click_tool.ini");
+        if (File.Exists(fCfg))
+        {
+            var tCfg = File.ReadAllLines(fCfg);
+            if (tCfg.Length > 2)
+            {
+                cfg = tCfg;
+            }
         }
+        hk.SelectedItem = cfg[0];
+        dv.Text = cfg[1];
+        int.TryParse(cfg[2], out int ctv);
+        ct.SelectedIndex = ctv;
+        FormClosing += (__, _) => File.WriteAllLines(fCfg, cfg);
+        //EventsEnd
+    }
+
+    [STAThread]
+    public static void Main()
+    {
+        SetProcessDPIAware();
+        Application.EnableVisualStyles();
+        Application.Run(new MouseClickTool());
     }
 }
