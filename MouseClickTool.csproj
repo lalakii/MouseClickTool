@@ -26,7 +26,7 @@
     <GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Default|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <AssemblyName>MouseClickTool_$(PlatformTarget)</AssemblyName>
     <OutputPath>obj\</OutputPath>
     <WarningLevel>5</WarningLevel>
@@ -42,6 +42,9 @@
     <DebugType>none</DebugType>
     <UseWinFormsOutOfProcDesigner>False</UseWinFormsOutOfProcDesigner>
     <NoWarn>S2486;S108;S3011;S3267;S1075;S3358;S3903;</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyName>MouseClickTool_x86</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

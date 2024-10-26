@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-[assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+[assembly: AssemblyVersion("2.1.0.0")]
+[assembly: AssemblyFileVersion("2.1.0.0")]
 [assembly: AssemblyTitle("MouseClickTool")]
 [assembly: AssemblyProduct("MouseClickTool")]
 [assembly: AssemblyCopyright("Copyright (C) 2024 lalaki.cn")]
@@ -16,6 +16,7 @@ using System.Windows.Forms;
 public class MouseClickTool : Form
 {
     private Input input;
+    private int waitSeconds = 3;
     private bool running = false;
     private TaskCompletionSource<int> source;
     private readonly string[] cfg = ["F1", "1000", "0"];
@@ -35,20 +36,6 @@ public class MouseClickTool : Form
     //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
     [DllImport("user32.dll")]
     private static extern uint SendInput(uint nInputs, ref Input pInputs, int cbSize);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct Input
-    {
-        public int type;
-        public MouseKeybdhardwareInputUnion mkhi;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct MouseKeybdhardwareInputUnion
-    {
-        [FieldOffset(0)]
-        public MouseInput mi;
-    }
 
     [Flags]
     private enum MouseEventFlag : uint
@@ -70,6 +57,20 @@ public class MouseClickTool : Form
         public IntPtr dwExtraInfo;
     }
 
+    [StructLayout(LayoutKind.Explicit)]
+    private struct MouseKeybdhardwareInputUnion
+    {
+        [FieldOffset(0)]
+        public MouseInput mi;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Input
+    {
+        public int type;
+        public MouseKeybdhardwareInputUnion mkhi;
+    }
+
     protected override CreateParams CreateParams
     {
         get
@@ -86,6 +87,7 @@ public class MouseClickTool : Form
         base.WndProc(ref m);
         if (m.Msg == 0x0312)
         {
+            waitSeconds = 0;
             bs.PerformClick();
         }
         else if (m.Msg == 0x84)
@@ -100,14 +102,13 @@ public class MouseClickTool : Form
         bs.Enabled = true;
     }
 
-    private int GetDiffHeight(int height1, int height2)
+    private static int GetDiffHeight(int h0, int h1)
     {
-        return Math.Abs(height1 - height2) / 2;
+        return Math.Abs(h0 - h1) / 2;
     }
 
     public MouseClickTool()
     {
-        //CreateWindow and Controls
         Text = title;
         BackColor = Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -132,7 +133,6 @@ public class MouseClickTool : Form
         {
             hk.Items.Add("F" + i);
         }
-        //InitEvents
         hk.SelectedIndexChanged += (_, __) =>
         {
             int hotkeyId = 0x233;
@@ -164,7 +164,6 @@ public class MouseClickTool : Form
                     bs.Enabled = ct.Enabled = false;
                     Task.Run(async () =>
                     {
-                        int waitSeconds = 3;
                         for (int i = 1; i < waitSeconds; i++)
                         {
                             Invoke(() => bs.Text = string.Format("{0}", waitSeconds - i));
@@ -208,6 +207,7 @@ public class MouseClickTool : Form
                             dv.ReadOnly = false;
                             ct.Enabled = true;
                         });
+                        waitSeconds = 3;
                     });
                 }
                 else
@@ -239,7 +239,6 @@ public class MouseClickTool : Form
         };
         Load += (_, _) =>
         {
-            //InitLayout
             hk.Width = dv.Width = (int)DefaultFont.Size * 6;
             if (dvl.Width > hkl.Width)
             {
@@ -271,7 +270,6 @@ public class MouseClickTool : Form
             bm.Top = (bc.Height - bm.Height) / 2;
             bh.Left = bm.Left - bc.Width - 3;
         };
-        //LoadCfg
         var fCfg = Path.Combine(Path.GetTempPath(), "lalaki_mouse_click_tool.ini");
         if (File.Exists(fCfg))
         {
@@ -286,7 +284,6 @@ public class MouseClickTool : Form
         int.TryParse(cfg[2], out int ctv);
         ct.SelectedIndex = ctv;
         FormClosing += (__, _) => File.WriteAllLines(fCfg, cfg);
-        //EventsEnd
     }
 
     [STAThread]
