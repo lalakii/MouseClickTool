@@ -128,7 +128,10 @@ public class MouseClickTool : Form
                 c.Font = new Font("Segoe UI", c.Font.Size);
             }
         }
-        ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right"]);
+        Graphics g = ct.CreateGraphics();
+        int StringWidth = (int)g.MeasureString("右键长按(Right Long Press)", new Font("Segoe UI", DefaultFont.Size)).Width;
+        ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", cn ? "右键长按(Right Long Press)" : "Right Long Press"]);
+        ct.DropDownWidth = StringWidth;
         for (int i = 1; i < 13; i++)
         {
             hk.Items.Add("F" + i);
@@ -171,30 +174,58 @@ public class MouseClickTool : Form
                         }
                         var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
                         var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                        bool LongPress = false;
                         Invoke(() =>
                         {
                             UpdateText();
-                            if (ct.SelectedIndex == 1)
+                            if (ct.SelectedIndex == 1 || ct.SelectedIndex == 3)
                             {
                                 downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
                                 upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
                             }
+                            if (ct.SelectedIndex >= 2)
+                            {
+                                LongPress = true;
+                            }
                         });
                         source = new TaskCompletionSource<int>();
                         var size = Marshal.SizeOf(input);
-                        while (running)
+                        if (!LongPress)
                         {
-                            await Task.Run(async () =>
+                            while (running)
                             {
-                                input.mkhi.mi.dwFlags = downFlag;
-                                SendInput(1, ref input, size);
-                                input.mkhi.mi.dwFlags = upFlag;
-                                SendInput(1, ref input, size);
-                                if (delay != 0)
+                                await Task.Run(async () =>
                                 {
-                                    await Task.WhenAny(Task.Delay(delay), source.Task);
-                                }
-                            });
+                                    input.mkhi.mi.dwFlags = downFlag;
+                                    SendInput(1, ref input, size);
+                                    input.mkhi.mi.dwFlags = upFlag;
+                                    SendInput(1, ref input, size);
+                                    if (delay != 0)
+                                    {
+                                        await Task.WhenAny(Task.Delay(delay), source.Task);
+                                    }
+                                });
+                            }
+                        }
+                        else
+                        {
+                            bool pressed = false;
+                            while (running)
+                            {
+                                await Task.Run(async () =>
+                                {
+                                    if (!pressed)
+                                    {
+                                        pressed = true;
+                                        input.mkhi.mi.dwFlags = downFlag;
+                                        SendInput(1, ref input, size);
+                                    }
+                                    if (delay != 0)
+                                    {
+                                        await Task.WhenAny(Task.Delay(delay), source.Task);
+                                    }
+                                });
+                            }
                         }
                         source = null;
                         if (delay == 0)
@@ -218,6 +249,11 @@ public class MouseClickTool : Form
             else
             {
                 bs.Enabled = running = false;
+                if (ct.SelectedIndex >= 2)
+                {
+                    input.mkhi.mi.dwFlags = ct.SelectedIndex == 2 ? MouseEventFlag.MOUSEEVENTF_LEFTUP : MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                    SendInput(1, ref input, Marshal.SizeOf(input));
+                }
                 if (source != null && !source.Task.IsCompleted)
                 {
                     source.SetCanceled();
