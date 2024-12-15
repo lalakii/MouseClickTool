@@ -2,5 +2,6 @@
 bin/
 .vs/
 obj/
+MouseClickTool.resx
 main.resx
 MouseClickTool.csproj.user
