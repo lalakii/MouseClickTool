@@ -1,4 +1,5 @@
 # MouseClickTool 
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.jpg" alt="MouseClickTool" width="100" />
 
 [![Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
 [![Windows .exe program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://www.bilibili.com/opus/956151293127163924)
@@ -19,7 +20,7 @@
 
 [本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123pan.com/s/jE3Sjv-IWExd.html) | [蓝奏云](https://a01.lanzout.com/b0hc64t7g) **密码：d59m**
   
-<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.png?v=2.0" />
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.png?v=2.0" alt="MouseClickTool MainForm"/>
 
 ## 常见问题
 

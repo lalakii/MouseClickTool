@@ -1,4 +1,5 @@
 # MouseClickTool 
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.jpg" alt="MouseClickTool" width="100" />
 
 [![Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
 [![Windows .exe program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://www.bilibili.com/opus/956151293127163924)
@@ -17,7 +18,7 @@
 
 [Github Releases](https://github.com/lalakii/MouseClickTool/releases) 
   
-<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool_en.png?v=2.0" />
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool_en.png?v=2.0" alt="MouseClickTool MainForm"/>
 
 ## FAQs
 
