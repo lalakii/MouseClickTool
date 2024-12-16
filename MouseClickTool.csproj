@@ -11,6 +11,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Windows|x64'">
     <OutputPath>obj\</OutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <AssemblyName>MouseClickTool_x64</AssemblyName>
     <WarningLevel>5</WarningLevel>
@@ -20,10 +22,13 @@
     <LangVersion>preview</LangVersion>
     <ErrorReport>none</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Windows|x86'">
     <OutputPath>obj\</OutputPath>
     <Optimize>true</Optimize>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
     <AssemblyName>MouseClickTool_x86</AssemblyName>
     <WarningLevel>5</WarningLevel>
     <NoWarn>S2486;S108;RCS1110;S1075;S3903;RCS1135</NoWarn>
