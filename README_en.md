@@ -3,9 +3,9 @@
 <img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.jpg" alt="MouseClickTool" width="100" />
 
 [![Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
-[![Windows .exe program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://www.bilibili.com/opus/956151293127163924)
+[![Windows .exe program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://mouseclicktool.sourceforge.io/)
 
-[ [简体中文](tree/README.md) | [English](tree/README_en.md) ]
+[ [简体中文](README.md) | [English](README_en.md) ]
 
 > Simple and easy to use mouse clicker.
 

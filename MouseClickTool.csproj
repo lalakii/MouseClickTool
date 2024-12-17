@@ -57,8 +57,10 @@
     <Compile Include="MouseClickTool.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="AfterBuild">
+    <MSBuild Condition="'$(Platform)' == 'x64'" Projects="$(MSBuildProjectFile)" Properties="Platform=x86;PlatFormTarget=x86" RunEachTargetSeparately="true" />
+  </Target>
   <PropertyGroup>
-    <PostBuildEvent>rd /s /q "$(TargetDir)"x86 &gt; NUL 2&gt;&amp;1 &amp;
-rd /s /q "$(TargetDir)"x64 &gt; NUL 2&gt;&amp;1 &amp;</PostBuildEvent>
+    <PostBuildEvent>rd /s /q "$(TargetDir)$(PlatformName)" &gt; NUL 2&gt;&amp;1 &amp;</PostBuildEvent>
   </PropertyGroup>
 </Project>

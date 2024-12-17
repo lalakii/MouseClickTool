@@ -20,14 +20,13 @@ public class MouseClickTool : Form
     private readonly bool cn = System.Globalization.CultureInfo.InstalledUICulture.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
     private readonly string tt = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
     private Input input;
-    private bool running;
     private TaskCompletionSource<int> ss;
     private int wait = 3;
 
     public MouseClickTool()
     {
         Text = tt;
-        bool isDark = false;
+        var isDark = false;
         try { isDark = ShouldSystemUseDarkMode(); } catch { }
         BackColor = isDark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -55,12 +54,9 @@ public class MouseClickTool : Form
                 }
             }
         }
-        using (var g = ct.CreateGraphics())
-        {
-            string strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
-            ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress]);
-            ct.DropDownWidth = (int)g.MeasureString(strRPress, ct.Font).Width;
-        }
+        var strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
+        ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress]);
+        ct.DropDownWidth = TextRenderer.MeasureText(strRPress, ct.Font).Width;
         for (int i = 1; i < 13; i++)
         {
             hk.Items.Add($"F{i}");
@@ -77,23 +73,25 @@ public class MouseClickTool : Form
         dv.TextChanged += (_, __) => cfg[1] = dv.Text;
         ct.SelectedIndexChanged += (_, __) => cfg[2] = ct.SelectedIndex.ToString();
         bc.MouseEnter += (_, __) => bc.ForeColor = Color.IndianRed;
-        bc.MouseLeave += (_, __) => bc.ForeColor = isDark ? Color.GhostWhite : Color.Black;
-        bc.Click += (_, __) => { Hide(); running = false; Application.Exit(); };
+        bc.MouseLeave += (_, __) => bc.ForeColor = isDark ? bs.ForeColor : Color.Black;
+        bc.Click += (_, __) => { Hide(); ss?.SetCanceled(); Application.Exit(); };
         bm.MouseEnter += (_, __) => bm.ForeColor = Color.MediumPurple;
-        bm.MouseLeave += (_, __) => bm.ForeColor = isDark ? Color.GhostWhite : Color.Black;
+        bm.MouseLeave += (_, __) => bm.ForeColor = isDark ? bs.ForeColor : Color.Black;
         bm.Click += (_, __) => WindowState = FormWindowState.Minimized;
         bh.MouseEnter += (_, __) => bh.ForeColor = Color.DodgerBlue;
-        bh.MouseLeave += (_, __) => bh.ForeColor = isDark ? Color.GhostWhite : Color.Black;
+        bh.MouseLeave += (_, __) => bh.ForeColor = isDark ? bs.ForeColor : Color.Black;
         bh.Click += (_, __) => System.Diagnostics.Process.Start("https://mouseclicktool.sourceforge.io");
         bs.Click += (__, _) =>
         {
+            bs.Enabled = false;
             var LongPress = ct.SelectedIndex > 1;
-            if (!running && ct.Enabled)
+            var size = Marshal.SizeOf(input);
+            if (ss == null && ct.Enabled)
             {
                 if (int.TryParse(dv.Text, out int delay) && delay > -1)
                 {
-                    dv.ReadOnly = running = true;
-                    bs.Enabled = ct.Enabled = false;
+                    dv.ReadOnly = true;
+                    ct.Enabled = false;
                     Task.Run(async () =>
                     {
                         for (int i = 1; i < wait; i++)
@@ -106,16 +104,15 @@ public class MouseClickTool : Form
                         Invoke(() =>
                         {
                             UpdateText();
-                            if (ct.SelectedIndex == 1 || ct.SelectedIndex == 3)
+                            if ((ct.SelectedIndex & 1) == 1)
                             {
                                 downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
                                 upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
                             }
                         });
-                        var size = Marshal.SizeOf(input);
                         var pressed = false;
                         ss = new();
-                        while (running)
+                        while (ss?.Task.IsCompleted == false)
                         {
                             await Task.Run(async () =>
                             {
@@ -131,22 +128,23 @@ public class MouseClickTool : Form
                                 }
                                 else
                                 {
+                                    input.mkhi.mi.dwFlags = upFlag;
                                     pressed = true;
                                 }
                                 if (delay != 0)
                                 {
-                                    await Task.WhenAny(Task.Delay(delay), ss.Task);
+                                    await Task.WhenAny(Task.Delay(delay), ss?.Task);
                                 }
                             });
                         }
-                        ss = null;
                         wait = 3;
+                        ss = null;
                         await Task.Delay(delay == 0 ? 5 : 0);
                         Invoke(() =>
                         {
-                            UpdateText();
                             dv.ReadOnly = false;
                             ct.Enabled = true;
+                            UpdateText();
                         });
                     });
                 }
@@ -155,18 +153,13 @@ public class MouseClickTool : Form
                     MessageBox.Show(cn ? "鼠标点击间隔必须是一个自然数" : "Mouse click intervals must be natural numbers", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            else
+            else if (ss?.Task.IsCompleted == false)
             {
                 if (LongPress)
                 {
-                    input.mkhi.mi.dwFlags = ct.SelectedIndex == 2 ? MouseEventFlag.MOUSEEVENTF_LEFTUP : MouseEventFlag.MOUSEEVENTF_RIGHTUP;
-                    SendInput(1, ref input, Marshal.SizeOf(input));
+                    SendInput(1, ref input, size);
                 }
-                bs.Enabled = running = false;
-                if (ss?.Task.IsCompleted == false)
-                {
-                    ss.SetCanceled();
-                }
+                ss?.SetCanceled();
             }
         };
         Paint += (_, e) =>
@@ -178,16 +171,13 @@ public class MouseClickTool : Form
                 g.DrawLine(p, Width, 0, 0, 0);
                 p.Color = isDark ? Color.LightGray : Color.FromArgb(60, 0, 0, 0);
                 p.Width = .1f;
-                g.DrawRectangle(p, 5, dvl.Top - 5, Width - 12, Height - dvl.Top);
+                g.DrawRectangle(p, 5, dvl.Top - 5, Width - 13, Height - dvl.Top);
             }
-            if (WindowState == FormWindowState.Maximized)
-            {
-                WindowState = FormWindowState.Normal;
-            }
+            WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
         };
         Load += (_, _) =>
         {
-            hk.Width = dv.Width = (int)DefaultFont.Size * 6;
+            hk.Width = dv.Width = (int)DefaultFont.Size * 8;
             if (dvl.Width > hkl.Width)
             {
                 dvl.Left = 8;
@@ -208,12 +198,12 @@ public class MouseClickTool : Form
             hk.Left = dv.Left;
             hk.Top = hkl.Top - DiffHeight(hk.Height, hkl.Height);
             bs.Left = ct.Left;
-            bs.Width = (int)(hk.Width * 2.1);
+            bs.Width = ct.DropDownWidth / 2;
             bs.Top = hk.Top - DiffHeight(bs.Height, hk.Height);
             ct.Width = bs.Width;
             Width = bs.Left + bs.Width + dvl.Left;
             Height = bs.Top + bs.Height + ft;
-            bc.Left = Width - bc.Width;
+            bc.Left = Width - bc.Width - ft;
             bm.Left = bc.Left - bc.Width;
             bm.Top = (bc.Height - bm.Height) / 2;
             bh.Left = bm.Left - bc.Width - 3;
@@ -248,7 +238,7 @@ public class MouseClickTool : Form
         get
         {
             var cp = base.CreateParams;
-            cp.Style &= 0x800000 | 0x20000;
+            cp.Style = 0x20000;
             return cp;
         }
     }
@@ -280,7 +270,9 @@ public class MouseClickTool : Form
 
     private static int DiffHeight(int h0, int h1)
     {
-        return Math.Abs(h0 - h1) / 2;
+        int value = h0 - h1;
+        int mask = value >> 31;
+        return ((value + mask) ^ mask) / 2;
     }
 
     [DllImport("user32.dll")]
@@ -301,9 +293,9 @@ public class MouseClickTool : Form
 
     private void UpdateText()
     {
-        var str1 = cn ? "停止" : "Stop";
-        var str2 = cn ? "开始" : "Start";
-        bs.Text = $"{(running ? str1 : str2)}({cfg[0]})";
+        var str1 = cn ? "开始" : "Start";
+        var str2 = cn ? "停止" : "Stop";
+        bs.Text = $"{(ss == null ? str1 : str2)}({cfg[0]})";
         bs.Enabled = true;
     }
 
