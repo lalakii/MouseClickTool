@@ -30,12 +30,7 @@ public class MouseClickTool : Form
         try { isDark = ShouldSystemUseDarkMode(); } catch { }
         BackColor = isDark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
-        Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, hkl = new()
-        {
-            Text = cn ? "快捷键(hotkey):" : "Hotkey(temp):",
-            TextAlign = ContentAlignment.BottomCenter,
-            AutoSize = true
-        }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font };
+        Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, hkl = new() { Text = cn ? "快捷键(hotkey):" : "Hotkey(temp):", TextAlign = ContentAlignment.BottomCenter, AutoSize = true }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font };
         ComboBox ct = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = isDark ? FlatStyle.Flat : FlatStyle.System }, hk = new() { DropDownStyle = ct.DropDownStyle, FlatStyle = ct.FlatStyle };
         TextBox dv = new();
         Controls.AddRange([ct, hk, dv, dvl, hkl, bs, bc, bm, bh]);
@@ -55,18 +50,18 @@ public class MouseClickTool : Form
             }
         }
         var strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
+        ct.DropDownWidth = TextRenderer.MeasureText(strRPress, dvl.Font).Width;
         ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress]);
-        ct.DropDownWidth = TextRenderer.MeasureText(strRPress, ct.Font).Width;
         for (int i = 1; i < 13; i++)
         {
             hk.Items.Add($"F{i}");
         }
+        const int hotkeyId = 0x233;
         hk.SelectedIndexChanged += (_, __) =>
         {
-            const int hotkeyId = 0x233;
             UnregisterHotKey(Handle, hotkeyId);
             Enum.TryParse(hk.Text, out Keys key);
-            RegisterHotKey(Handle, hotkeyId, 0x4000, (uint)key);
+            RegisterHotKey(Handle, hotkeyId, 0x4000, key);
             cfg[0] = key.ToString();
             UpdateText();
         };
@@ -84,14 +79,18 @@ public class MouseClickTool : Form
         bs.Click += (__, _) =>
         {
             bs.Enabled = false;
-            var LongPress = ct.SelectedIndex > 1;
-            var size = Marshal.SizeOf(input);
-            if (ss == null && ct.Enabled)
+            if (ct.Enabled && ss == null)
             {
                 if (int.TryParse(dv.Text, out int delay) && delay > -1)
                 {
-                    dv.ReadOnly = true;
-                    ct.Enabled = false;
+                    dv.Enabled = ct.Enabled = false;
+                    var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                    var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                    if ((ct.SelectedIndex & 1) == 1)
+                    {
+                        downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                        upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                    }
                     Task.Run(async () =>
                     {
                         for (int i = 1; i < wait; i++)
@@ -99,19 +98,11 @@ public class MouseClickTool : Form
                             Invoke(() => bs.Text = $"{wait - i}");
                             await Task.Delay(1000);
                         }
-                        var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
-                        var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
-                        Invoke(() =>
-                        {
-                            UpdateText();
-                            if ((ct.SelectedIndex & 1) == 1)
-                            {
-                                downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
-                                upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
-                            }
-                        });
-                        var pressed = false;
                         ss = new();
+                        Invoke(() => UpdateText());
+                        var pressed = false;
+                        var LongPress = ct.SelectedIndex > 1;
+                        var size = Marshal.SizeOf(input);
                         while (ss?.Task.IsCompleted == false)
                         {
                             await Task.Run(async () =>
@@ -137,15 +128,14 @@ public class MouseClickTool : Form
                                 }
                             });
                         }
-                        wait = 3;
-                        ss = null;
-                        await Task.Delay(delay == 0 ? 5 : 0);
-                        Invoke(() =>
+                        if (LongPress)
                         {
-                            dv.ReadOnly = false;
-                            ct.Enabled = true;
-                            UpdateText();
-                        });
+                            SendInput(1, ref input, size);
+                        }
+                        wait = 3;
+                        await Task.Delay(delay == 0 ? 1 : 0);
+                        ss = null;
+                        Invoke(() => { dv.Enabled = ct.Enabled = true; UpdateText(); });
                     });
                 }
                 else
@@ -155,10 +145,6 @@ public class MouseClickTool : Form
             }
             else if (ss?.Task.IsCompleted == false)
             {
-                if (LongPress)
-                {
-                    SendInput(1, ref input, size);
-                }
                 ss?.SetCanceled();
             }
         };
@@ -212,14 +198,11 @@ public class MouseClickTool : Form
         if (File.Exists(fCfg))
         {
             var tCfg = File.ReadAllLines(fCfg);
-            if (tCfg.Length > 2)
-            {
-                cfg = tCfg;
-            }
+            cfg = (tCfg.Length > 2) ? tCfg : cfg;
         }
+        int.TryParse(cfg[2], out int ctv);
         hk.SelectedItem = cfg[0];
         dv.Text = cfg[1];
-        int.TryParse(cfg[2], out int ctv);
         ct.SelectedIndex = ctv;
         FormClosing += (__, _) => File.WriteAllLines(fCfg, cfg);
     }
@@ -276,7 +259,7 @@ public class MouseClickTool : Form
     }
 
     [DllImport("user32.dll")]
-    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, Keys vk);
 
     //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
     [DllImport("user32.dll")]
