@@ -5,3 +5,5 @@ obj/
 MouseClickTool.resx
 main.resx
 MouseClickTool.csproj.user
+GzExe
+gen_pkg.bat

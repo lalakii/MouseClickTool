@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseClickTool", "MouseClickTool.csproj", "{64FA4132-AC70-4006-9495-F974EE2DD808}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GzExe", "GzExe\GzExe.csproj", "{396795DA-6065-4CC8-822F-6A5BABC6D0A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Windows|x64 = Windows|x64
@@ -15,6 +17,10 @@ Global
 		{64FA4132-AC70-4006-9495-F974EE2DD808}.Windows|x64.Build.0 = Windows|x64
 		{64FA4132-AC70-4006-9495-F974EE2DD808}.Windows|x86.ActiveCfg = Windows|x86
 		{64FA4132-AC70-4006-9495-F974EE2DD808}.Windows|x86.Build.0 = Windows|x86
+		{396795DA-6065-4CC8-822F-6A5BABC6D0A6}.Windows|x64.ActiveCfg = Windows|x64
+		{396795DA-6065-4CC8-822F-6A5BABC6D0A6}.Windows|x64.Build.0 = Windows|x64
+		{396795DA-6065-4CC8-822F-6A5BABC6D0A6}.Windows|x86.ActiveCfg = Windows|x86
+		{396795DA-6065-4CC8-822F-6A5BABC6D0A6}.Windows|x86.Build.0 = Windows|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
