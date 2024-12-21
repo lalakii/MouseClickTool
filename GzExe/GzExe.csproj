@@ -40,7 +40,6 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Compile Include="A.cs" />
-    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild" BeforeTargets="Build">

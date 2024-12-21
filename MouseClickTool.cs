@@ -17,9 +17,10 @@ public class MouseClickTool : Form
 
     public MouseClickTool()
     {
-        Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
+        Application.EnableVisualStyles();
         var isDark = false;
-        try { isDark = ShouldSystemUseDarkMode(); } catch { }
+        try { isDark = ShouldSystemUseDarkMode(); SetProcessDPIAware(); } catch { }
+        Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = isDark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
         Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, hkl = new() { Text = cn ? "快捷键(hotkey):" : "Hotkey(temp):", TextAlign = ContentAlignment.BottomCenter, AutoSize = true }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font };
@@ -203,7 +204,8 @@ public class MouseClickTool : Form
         hk.SelectedItem = cfg[0];
         dv.Text = cfg[1];
         ct.SelectedIndex = ctv;
-        FormClosing += (__, _) => File.WriteAllLines(fCfg, cfg);
+        FormClosing += (__, _) => { try { File.WriteAllLines(fCfg, cfg); } catch { } };
+        Application.Run(this);
     }
 
     [Flags]
@@ -256,6 +258,9 @@ public class MouseClickTool : Form
     //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
     [DllImport("user32.dll")]
     private static extern uint SendInput(uint nInputs, ref Input pInputs, int cbSize);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetProcessDPIAware();
 
     [DllImport("UXTheme.dll", EntryPoint = "#138")]
     private static extern bool ShouldSystemUseDarkMode();
