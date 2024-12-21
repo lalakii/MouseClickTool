@@ -26,8 +26,7 @@ public class MouseClickTool : Form
         Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, hkl = new() { Text = cn ? "快捷键(hotkey):" : "Hotkey(temp):", TextAlign = ContentAlignment.BottomCenter, AutoSize = true }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font };
         ComboBox ct = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = isDark ? FlatStyle.Flat : FlatStyle.System }, hk = new() { DropDownStyle = ct.DropDownStyle, FlatStyle = ct.FlatStyle };
         TextBox dv = new();
-        Controls.AddRange([ct, hk, dv, dvl, hkl, bs, bc, bm, bh]);
-        foreach (Control c in Controls)
+        foreach (Control c in (Control[])[ct, hk, dv, dvl, hkl, bs, bc, bm, bh])
         {
             if (isDark)
             {
@@ -41,6 +40,7 @@ public class MouseClickTool : Form
                     c.BackColor = BackColor;
                 }
             }
+            Controls.Add(c);
         }
         var strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
         ct.DropDownWidth = TextRenderer.MeasureText(strRPress, ct.Font).Width;

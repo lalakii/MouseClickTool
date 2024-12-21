@@ -21,7 +21,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <Optimize>true</Optimize>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <NoWarn>S3903;RCS1110;S2486;S108</NoWarn>
+    <NoWarn>S3903;RCS1110</NoWarn>
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
