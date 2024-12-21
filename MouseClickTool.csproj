@@ -4,10 +4,9 @@
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
     <ProjectGuid>{64FA4132-AC70-4006-9495-F974EE2DD808}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>def</RootNamespace>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
-    <NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Windows|x64'">
     <OutputPath>obj\</OutputPath>
@@ -38,6 +37,9 @@
     <ErrorReport>none</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8.1">

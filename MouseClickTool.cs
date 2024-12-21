@@ -226,14 +226,6 @@ public class MouseClickTool : Form
         }
     }
 
-    [STAThread]
-    public static void Main()
-    {
-        try { SetProcessDPIAware(); } catch { }
-        Application.EnableVisualStyles();
-        Application.Run(new MouseClickTool());
-    }
-
     protected override void WndProc(ref Message m)
     {
         if (m.Msg != 0x00A3)
@@ -264,9 +256,6 @@ public class MouseClickTool : Form
     //参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
     [DllImport("user32.dll")]
     private static extern uint SendInput(uint nInputs, ref Input pInputs, int cbSize);
-
-    [DllImport("user32.dll")]
-    private static extern bool SetProcessDPIAware();
 
     [DllImport("UXTheme.dll", EntryPoint = "#138")]
     private static extern bool ShouldSystemUseDarkMode();
