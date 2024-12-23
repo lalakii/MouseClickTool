@@ -5,7 +5,7 @@
 [![Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
 [![Windows .exe program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://mouseclicktool.sourceforge.io/)
 
-[ [English](README_en.md) | [简体中文](README.md) ]
+[ [English](tree/README_en.md) | [简体中文](tree/README.md) ]
 
 > 简单好用的鼠标连点器，玩游戏需要鼠标连点，在网上找了好多鼠标连点器，有的居然还要收费...
 >
