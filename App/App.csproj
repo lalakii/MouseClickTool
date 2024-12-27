@@ -2,32 +2,44 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>false</RunAnalyzers>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <LangVersion>preview</LangVersion>
     <NoWin32Manifest>true</NoWin32Manifest>
-    <OutputPath>..\output\</OutputPath>
     <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <NoWarn>S3903;RCS1110;SA1633;SA1600;CS1591</NoWarn>
     <ProjectGuid>{396795DA-6065-4CC8-822F-6A5BABC6D0A6}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x86' ">
     <AssemblyName>MouseClickTool_win32</AssemblyName>
-    <Prefer32Bit>true</Prefer32Bit>
+    <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>x86</PlatformTarget>
     <Optimize>true</Optimize>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <OutputPath>..\output\</OutputPath>
+    <NoWarn>S3903;RCS1110;SA1633;SA1600;CS1591</NoWarn>
+    <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x64' ">
     <StartupObject />
     <AssemblyName>MouseClickTool_win64</AssemblyName>
     <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\output\</OutputPath>
     <Optimize>true</Optimize>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-  <PropertyGroup>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
-    <NoWarn>S3903;RCS1110</NoWarn>
+    <NoWarn>S3903;RCS1110;SA1633;SA1600;CS1591</NoWarn>
     <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+ <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -36,15 +48,23 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x86' ">
-    <EmbeddedResource Include="x86.gz" />
+    <EmbeddedResource Include="x86.GZ" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x64' ">
-    <EmbeddedResource Include="x64.gz" />
+    <EmbeddedResource Include="x64.GZ" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Compile Include="A.cs" />
+    <Compile Include="App.cs" />
     <Reference Include="System" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers.Unstable">
+      <Version>1.2.0.556</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild" BeforeTargets="Build">
@@ -54,9 +74,10 @@
     <MSBuild Condition="'$(Platform)' == 'x64'" Projects="$(MSBuildProjectFile)" Properties="Platform=x86;PlatFormTarget=x86" RunEachTargetSeparately="true" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>rd /s /q "$(TargetDir)$(PlatformName)" &gt; NUL 2&gt;&amp;1 &amp;</PostBuildEvent>
+    <PostBuildEvent>rd /s /q "$(TargetDir)$(PlatformName)" &gt; NUL 2&gt;&amp;1 &amp;
+</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>cd "$(SolutionDir)" &amp;&amp; gen_pkg.bat</PreBuildEvent>
+    <PreBuildEvent>cd "$(ProjectDir)" &amp;&amp; gen_pkg.bat</PreBuildEvent>
   </PropertyGroup>
 </Project>

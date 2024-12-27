@@ -5,20 +5,27 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("2.4.0.0")]
+[assembly: System.Reflection.AssemblyVersion("2.5.0.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
 {
     private readonly Button bs = new() { AutoSize = true };
+
     private readonly string[] cfg = ["F1", "1000", "0", "600"];
-    private readonly bool cn = System.Globalization.CultureInfo.InstalledUICulture.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
-    private Input input;
+
+    private readonly bool cn;
+
+    private Input m;
+
     private TaskCompletionSource<int> ss;
+
     private int wait = 3;
 
     public MouseClickTool()
     {
+        var cl = InputLanguage.CurrentInputLanguage.Culture;
+        cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
         Application.EnableVisualStyles();
         var dark = false;
         try
@@ -33,10 +40,11 @@ public class MouseClickTool : Form
         Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
-        Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, hkl = new() { Text = cn ? "快捷键(hotkey):" : "Hotkey(temp):", TextAlign = ContentAlignment.BottomCenter, AutoSize = true }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font };
+        Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, tvl = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = dvl.TextAlign, AutoSize = true }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font }, hkl = new() { AutoSize = true, TextAlign = dvl.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" };
         ComboBox ct = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, hk = new() { DropDownStyle = ct.DropDownStyle, FlatStyle = ct.FlatStyle };
+        DateTimePicker pk = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox dv = new();
-        foreach (Control c in (Control[])[ct, hk, dv, dvl, hkl, bs, bc, bm, bh])
+        foreach (Control c in (Control[])[ct, hk, dv, dvl, hkl, tvl, pk, bs, bc, bm, bh])
         {
             if (dark)
             {
@@ -88,96 +96,6 @@ public class MouseClickTool : Form
         bh.MouseEnter += (_, __) => bh.ForeColor = Color.DodgerBlue;
         bh.MouseLeave += (_, __) => bh.ForeColor = bs.ForeColor;
         bh.Click += (_, __) => System.Diagnostics.Process.Start("https://mouseclicktool.sourceforge.io");
-        bs.Click += (__, _) =>
-        {
-            bs.Enabled = false;
-            if (ct.Enabled && ss == null)
-            {
-                if (int.TryParse(dv.Text, out int delay) && delay > -1)
-                {
-                    dv.Enabled = ct.Enabled = false;
-                    var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
-                    var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
-                    if ((ct.SelectedIndex & 1) == 1)
-                    {
-                        downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
-                        upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
-                    }
-
-                    var mouseWheel = ct.SelectedIndex > 3;
-                    if (mouseWheel)
-                    {
-                        downFlag = MouseEventFlag.MOUSEEVENTF_WHEEL;
-                        int.TryParse(cfg[3], out int sc);
-                        input.mkhi.mi.mouseData = ct.SelectedIndex > 4 ? -sc : sc;
-                    }
-
-                    var longPress = ct.SelectedIndex > 1;
-                    Task.Run(async () =>
-                    {
-                        for (int i = 1; i < wait; i++)
-                        {
-                            Invoke(() => bs.Text = $"{wait - i}");
-                            await Task.Delay(1000);
-                        }
-
-                        var pressed = false;
-                        var size = Marshal.SizeOf(input);
-                        ss = new();
-                        Invoke(() => UpdateText());
-                        while (ss?.Task.IsCanceled == false)
-                        {
-                            await Task.Run(async () =>
-                            {
-                                if (!pressed || mouseWheel)
-                                {
-                                    input.mkhi.mi.dwFlags = downFlag;
-                                    SendInput(1, ref input, size);
-                                }
-
-                                if (!longPress)
-                                {
-                                    input.mkhi.mi.dwFlags = upFlag;
-                                    SendInput(1, ref input, size);
-                                }
-                                else
-                                {
-                                    input.mkhi.mi.dwFlags = upFlag;
-                                    pressed = true;
-                                }
-
-                                if (delay != 0)
-                                {
-                                    await Task.WhenAny(Task.Delay(delay), ss?.Task);
-                                }
-                            });
-                        }
-
-                        if (longPress && !mouseWheel)
-                        {
-                            SendInput(1, ref input, size);
-                        }
-
-                        wait = 3;
-                        await Task.Delay(delay == 0 ? 1 : 0);
-                        ss = null;
-                        Invoke(() =>
-                        {
-                            dv.Enabled = ct.Enabled = true;
-                            UpdateText();
-                        });
-                    });
-                }
-                else
-                {
-                    MessageBox.Show(cn ? "鼠标点击间隔必须是一个自然数" : "Mouse click intervals must be natural numbers", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else
-            {
-                ss?.TrySetCanceled();
-            }
-        };
         Paint += (_, e) =>
         {
             WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
@@ -191,7 +109,7 @@ public class MouseClickTool : Form
         };
         Load += (_, _) =>
         {
-            hk.Width = dv.Width = (int)DefaultFont.Size * 8;
+            hk.Width = dv.Width = (int)DefaultFont.Size * 9;
             Control a = dvl, b = hkl;
             (a, b) = b.Width > a.Width ? (b, a) : (a, b);
             a.Left = 8;
@@ -203,17 +121,22 @@ public class MouseClickTool : Form
             ct.Top = dvl.Top - DiffHeight(ct.Height, dv.Height);
             dv.Top = dvl.Top - DiffHeight(dv.Height, ct.Height);
             hkl.Top = dvl.Top + dvl.Height + 8;
+            tvl.Top = hkl.Top + hkl.Height + 8;
+            tvl.Left = dvl.Width + dvl.Left - tvl.Width;
+            pk.Left = dv.Left;
             hk.Left = dv.Left;
-            hk.Top = hkl.Top - DiffHeight(hk.Height, hkl.Height);
+            hk.Top = tvl.Top - DiffHeight(hk.Height, hkl.Height);
+            pk.Top = hkl.Top - DiffHeight(pk.Height, hkl.Height);
             bs.Left = ct.Left;
             bs.Width = ct.DropDownWidth / 2;
             bs.Top = hk.Top - DiffHeight(bs.Height, hk.Height);
             ct.Width = bs.Width;
-            Width = bs.Left + bs.Width + dvl.Left;
+            Width = bs.Left + bs.Width + 12;
+            pk.Width = bs.Width + hk.Width + ft;
             Height = bs.Top + bs.Height + ft;
             bc.Left = Width - bc.Width - 4;
             bm.Left = bc.Left - bc.Width;
-            bm.Top = (bc.Height - bm.Height) / 2;
+            bm.Top = DiffHeight(bc.Height, bm.Height);
             bh.Left = bm.Left - bc.Width - 3;
         };
         var fCfg = Path.Combine(Path.GetTempPath(), "lalaki_mouse_click_tool.ini");
@@ -237,11 +160,107 @@ public class MouseClickTool : Form
             {
             }
         };
+        bs.Click += (__, _) =>
+        {
+            bs.Enabled = false;
+            if (ct.Enabled && ss == null)
+            {
+                if (int.TryParse(dv.Text, out int delay) && delay > -1)
+                {
+                    dv.Enabled = ct.Enabled = pk.Enabled = false;
+                    var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                    var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                    if ((ct.SelectedIndex & 1) == 1)
+                    {
+                        downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                        upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                    }
+
+                    var mouseWheel = ct.SelectedIndex > 3;
+                    if (mouseWheel)
+                    {
+                        downFlag = MouseEventFlag.MOUSEEVENTF_WHEEL;
+                        int.TryParse(cfg[3], out int sc);
+                        m.mi.mouseData = ct.SelectedIndex > 4 ? -sc : sc;
+                    }
+
+                    var longPress = ct.SelectedIndex > 1;
+                    Task.Run(async () =>
+                    {
+                        for (int i = 1; i < wait; i++)
+                        {
+                            Invoke(() => bs.Text = $"{wait - i}");
+                            await Task.Delay(1000);
+                        }
+
+                        var pressed = false;
+                        var size = Marshal.SizeOf(m);
+                        ss = new();
+                        Invoke(() => UpdateText());
+                        var tg = pk.Value < DateTime.Now;
+                        while (ss?.Task.IsCanceled == false)
+                        {
+                            if (tg)
+                            {
+                                if (!pressed || mouseWheel)
+                                {
+                                    m.mi.dwFlags = downFlag;
+                                    SendInput(1, ref m, size);
+                                }
+
+                                if (!longPress)
+                                {
+                                    m.mi.dwFlags = upFlag;
+                                    SendInput(1, ref m, size);
+                                }
+                                else
+                                {
+                                    m.mi.dwFlags = upFlag;
+                                    pressed = true;
+                                }
+                            }
+                            else
+                            {
+                                tg = pk.Value < DateTime.Now;
+                            }
+
+                            if (delay != 0)
+                            {
+                                await Task.WhenAny(Task.Delay(delay), ss?.Task);
+                            }
+                        }
+
+                        if (longPress && !mouseWheel)
+                        {
+                            SendInput(1, ref m, size);
+                        }
+
+                        await Task.Delay(delay == 0 ? 5 : 0);
+                        wait = 3;
+                        ss = null;
+                        Invoke(() =>
+                        {
+                            dv.Enabled = ct.Enabled = pk.Enabled = true;
+                            pk.Value = DateTime.Now;
+                            UpdateText();
+                        });
+                    });
+                }
+                else
+                {
+                    MessageBox.Show(cn ? "鼠标点击间隔必须是一个自然数" : "Mouse click intervals must be natural numbers", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                ss?.TrySetCanceled();
+            }
+        };
         Application.Run(this);
     }
 
     [Flags]
-    private enum MouseEventFlag : uint
+    private enum MouseEventFlag
     {
         MOUSEEVENTF_LEFTDOWN = 0x0002,
         MOUSEEVENTF_LEFTUP = 0x0004,
@@ -262,18 +281,15 @@ public class MouseClickTool : Form
 
     protected override void WndProc(ref Message m)
     {
-        if (m.Msg != 0x00A3)
+        base.WndProc(ref m);
+        if (m.Msg == 0x84)
         {
-            base.WndProc(ref m);
-            if (m.Msg == 0x0312)
-            {
-                wait = 0;
-                bs.PerformClick();
-            }
-            else if (m.Msg == 0x84)
-            {
-                m.Result = (IntPtr)0x2;
-            }
+            m.Result = (IntPtr)0x2;
+        }
+        else if (m.Msg == 0x0312)
+        {
+            wait = 0;
+            bs.PerformClick();
         }
     }
 
@@ -285,11 +301,11 @@ public class MouseClickTool : Form
     }
 
     [DllImport("user32.dll")]
-    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, Keys vk);
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, Keys vk);
 
     // 参考：https://stackoverflow.com/questions/5094398/how-to-programmatically-mouse-move-click-right-click-and-keypress-etc-in-winfo
     [DllImport("user32.dll")]
-    private static extern uint SendInput(uint nInputs, ref Input pInputs, int cbSize);
+    private static extern int SendInput(int nInputs, ref Input pInputs, int cbSize);
 
     [DllImport("user32.dll")]
     private static extern bool SetProcessDPIAware();
@@ -312,7 +328,7 @@ public class MouseClickTool : Form
     private struct Input
     {
         public int type;
-        public MouseKeybdhardwareInputUnion mkhi;
+        public MouseInput mi;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -322,14 +338,7 @@ public class MouseClickTool : Form
         public int dy;
         public int mouseData;
         public MouseEventFlag dwFlags;
-        public uint time;
+        public int time;
         public IntPtr dwExtraInfo;
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    private struct MouseKeybdhardwareInputUnion
-    {
-        [FieldOffset(0)]
-        public MouseInput mi;
     }
 }

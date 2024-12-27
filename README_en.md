@@ -1,21 +1,22 @@
 # MouseClickTool
 
-<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.jpg" alt="MouseClickTool" width="100" />
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/MouseClickTool.jpg" alt="MouseClickTool Logo" width="96" />
 
-[![Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
-[![Windows .exe program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://mouseclicktool.sourceforge.io/)
+[![MouseClickTool Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
+[![MouseClickTool.exe Windows Program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://mouseclicktool.sourceforge.io/)
 
-[ [简体中文](tree/README.md) | [English](tree/README_en.md) ]
+[ [简体中文](README.md) | [English](README_en.md) ]
 
 > Simple and easy to use mouse clicker.
 
 ## Features
 
-- Supports toggling left/right mouse clicks
-- Support for customizing the click interval in milliseconds
+- Support to switch between left/right mouse click/long press click/scroll wheel.
+- Support customized click interval in milliseconds
 - Support customized hotkeys
-- Automatically memorize the configuration parameters, the configuration file is stored in the system temporary file directory.
-- Version 2.0 reconstructed the form to make the software interface more compact.
+- Supports specified time triggering
+- Adapted to dark color mode
+- Automatically memorize the configuration parameters, the configuration file is stored in the system temporary directory, without polluting the registry.
 
 ## Download
 
@@ -25,7 +26,7 @@
 
 ## FAQs
 
-If there is software that cannot be clicked, try running this software as an administrator.
+If any of the software is not clickable, try running this software as an administrator or with TrustedInstaller privileges. Here's an extractor tool: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/)
 
 Be careful when setting up hotkeys that they don't conflict with other programs.
 
