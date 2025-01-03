@@ -7,6 +7,6 @@ if "%ERRORLEVEL%" NEQ "0" (
 )
 set projectName=App
 cd ..\obj\ || exit -1
-del ..\%projectName%\x64.def ..\%projectName%\x86.def /Q > NUL 2>&1
+del ..\%projectName%\x64.GZ ..\%projectName%\x86.GZ /Q > NUL 2>&1
 %procName% a -tgzip -mx9 -mtm- ..\%projectName%\x64.GZ MouseClickTool_x64.dll > NUL 2>&1
 %procName% a -tgzip -mx9 -mtm- ..\%projectName%\x86.GZ MouseClickTool_x86.dll > NUL 2>&1
