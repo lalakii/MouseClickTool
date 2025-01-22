@@ -3,10 +3,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 
-[assembly: AssemblyVersion("2.5.0.0")]
+[assembly: AssemblyVersion("2.6.0.0")]
 [assembly: AssemblyTitle("MouseClickTool minimal")]
 [assembly: AssemblyProduct("MouseClickTool minimal")]
-[assembly: AssemblyCopyright("Copyright (C) 2024 lalaki.cn")]
+[assembly: AssemblyCopyright("Copyright (C) 2025 lalaki.cn")]
 
 public static class NetApp
 {
@@ -20,16 +20,14 @@ public static class NetApp
         {
             if (f.Length == 0)
             {
-                System.Net.WebClient w = new();
-                new GZipStream(w.OpenRead($"https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/{a}.GZ"), CompressionMode.Decompress).CopyTo(m);
-                m.Position = 0;
+                new GZipStream(new System.Net.WebClient().OpenRead($"https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/{a}.GZ"), CompressionMode.Decompress).CopyTo(m);
                 m.CopyTo(f);
             }
             else
             {
                 f.CopyTo(m);
             }
-            Activator.CreateInstance(Assembly.Load(m.GetBuffer()).GetExportedTypes()[0]);
+            Assembly.Load(m.GetBuffer()).CreateInstance("MouseClickTool");
         }
         catch
         {

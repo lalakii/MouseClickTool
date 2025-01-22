@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("2.5.0.0")]
+[assembly: System.Reflection.AssemblyVersion("2.6.0.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
@@ -274,7 +274,7 @@ public class MouseClickTool : Form
         get
         {
             var cp = base.CreateParams;
-            cp.Style = 0x20000;
+            cp.Style &= 0x20000 | 0x800000;
             return cp;
         }
     }
