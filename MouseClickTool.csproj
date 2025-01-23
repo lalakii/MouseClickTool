@@ -45,9 +45,6 @@
    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>CS1591;S2486;S3903;S108;S1075;SA1600;SA1101;SA1633;SA1307;RCS1110;RCS1135;</NoWarn>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8.1">
       <Visible>False</Visible>

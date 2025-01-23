@@ -26,7 +26,6 @@
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x64' ">
-    <StartupObject />
     <AssemblyName>MouseClickTool_win64</AssemblyName>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\output\</OutputPath>

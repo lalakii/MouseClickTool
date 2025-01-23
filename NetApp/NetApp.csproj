@@ -26,7 +26,6 @@
     <WarningLevel>5</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x64' ">
-    <StartupObject />
     <AssemblyName>MouseClickTool_win64_minimal</AssemblyName>
     <PlatformTarget>x64</PlatformTarget>
     <Optimize>true</Optimize>
@@ -68,5 +67,6 @@
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
 </Project>
