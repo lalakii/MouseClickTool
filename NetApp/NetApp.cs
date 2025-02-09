@@ -1,33 +1,30 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Reflection;
 
-[assembly: AssemblyVersion("2.7.0.0")]
+[assembly: AssemblyVersion("2.8.0.0")]
 [assembly: AssemblyTitle("MouseClickTool minimal")]
 [assembly: AssemblyProduct("MouseClickTool minimal")]
 [assembly: AssemblyCopyright("Copyright (C) 2025 lalaki.cn")]
 
-public static class NetApp
+// main.
+var a = Environment.Is64BitProcess ? "x64" : "x86";
+Type? t = null;
+using (var f = File.Open(Path.Combine(Path.GetTempPath(), $"MouseClickTool_{a}.dll"), FileMode.OpenOrCreate, FileAccess.ReadWrite))
 {
-    [STAThread]
-    public static void Main()
+    try
     {
-        var a = Environment.Is64BitProcess ? "x64" : "x86";
-        const string n = "MouseClickTool";
-        using var f = new FileStream(Path.Combine(Path.GetTempPath(), $"{n}_{a}.dll"), FileMode.OpenOrCreate, FileAccess.ReadWrite);
-        try
+        if (f.Length == 0L)
         {
-            if (f.Length == 0)
-            {
-                new GZipStream(new System.Net.WebClient().OpenRead($"https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/{a}.GZ"), CompressionMode.Decompress).CopyTo(f);
-                f.Position = 0;
-            }
-            Assembly.Load(new BinaryReader(f).ReadBytes((int)f.Length)).CreateInstance(n);
+            new GZipStream(new System.Net.WebClient().OpenRead($"https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/{a}.GZ"), CompressionMode.Decompress).CopyToAsync(f).Wait();
+            f.Position = 0L;
         }
-        catch
-        {
-            f.SetLength(0);
-        }
+
+        t = Assembly.Load(new BinaryReader(f).ReadBytes((int)f.Length)).GetExportedTypes()[0];
+    }
+    catch
+    {
+        f.SetLength(0L);
     }
 }
+
+Activator.CreateInstance(t);

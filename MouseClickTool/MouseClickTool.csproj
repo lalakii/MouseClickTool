@@ -1,11 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <GetDate>$([System.DateTime]::Now.ToString(yyyy-MM-dd))</GetDate>
-    <OutputPath>..\bin\MouseClickTool_minimal\$(GetDate)</OutputPath>
-    <IntermediateOutputPath>..\obj\$(AssemblyName)</IntermediateOutputPath>
-    <AssemblyName>MouseClickTool_minimal</AssemblyName>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <OutputType>WinExe</OutputType>
+    <AssemblyName>MouseClickTool</AssemblyName>
+    <OutputType>Library</OutputType>
+    <OutputPath>..\bin\dll\</OutputPath>
     <LangVersion>preview</LangVersion>
     <TargetFrameworks>net462</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -16,11 +13,13 @@
     <IsPublishable>False</IsPublishable>
     <AnalysisLevel>latest</AnalysisLevel>
     <GenerateSupportedRuntime>False</GenerateSupportedRuntime>
-    <NoWarn>SA1633;SA0001;RCS1110;S3903;SA1600;SA1101;S2486;S108;S1075;SA1307;CA1050;</NoWarn>
+    <NoWarn>SA1633;SA0001;RCS1110;S3903;SA1600;SA1101;S2486;S108;S1075;SA1307;CA1050;RCS1135;</NoWarn>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Optimize>True</Optimize>
     <NoWin32Manifest>true</NoWin32Manifest>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
@@ -28,5 +27,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="cd &quot;$(SolutionDir)&quot; &amp;&amp; .\bat\gen_pkg.bat" />
+  </Target>
 </Project>

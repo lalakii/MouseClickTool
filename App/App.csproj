@@ -1,82 +1,37 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzers>false</RunAnalyzers>
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <LangVersion>preview</LangVersion>
-    <NoWin32Manifest>true</NoWin32Manifest>
-    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
-    <NoWarn>S3903;RCS1110;SA1633;SA1600;CS1591</NoWarn>
-    <ProjectGuid>{396795DA-6065-4CC8-822F-6A5BABC6D0A6}</ProjectGuid>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x86' ">
-    <AssemblyName>MouseClickTool_win32</AssemblyName>
-    <Prefer32Bit>false</Prefer32Bit>
-    <PlatformTarget>x86</PlatformTarget>
-    <Optimize>true</Optimize>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>none</DebugType>
-    <OutputPath>..\output\</OutputPath>
-    <NoWarn>S3903;RCS1110;SA1633;SA1600;CS1591</NoWarn>
-    <WarningLevel>5</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x64' ">
-    <AssemblyName>MouseClickTool_win64</AssemblyName>
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>..\output\</OutputPath>
-    <Optimize>true</Optimize>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>none</DebugType>
-    <NoWarn>S3903;RCS1110;SA1633;SA1600;CS1591</NoWarn>
-    <WarningLevel>5</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
- <GenerateDocumentationFile>false</GenerateDocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup>
+    <GetDate>$([System.DateTime]::Now.ToString(yyyy-MM-dd))</GetDate>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyName>MouseClickTool</AssemblyName>
+    <OutputPath>..\bin\MouseClickTool\$(GetDate)</OutputPath>
     <OutputType>WinExe</OutputType>
+    <LangVersion>preview</LangVersion>
+    <TargetFrameworks>net462</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <DebugType>none</DebugType>
+    <WarningLevel>9999</WarningLevel>
+    <IsPublishable>False</IsPublishable>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <GenerateSupportedRuntime>False</GenerateSupportedRuntime>
+    <NoWarn>SA1633;SA0001;RCS1110;S3903;SA1600;SA1101;S2486;S108;S1075;SA1307;CA1050;</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <Optimize>True</Optimize>
+    <Prefer32Bit>False</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-  </PropertyGroup>
-  <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x86' ">
+  <ItemGroup>
+    <ProjectReference Include="..\MouseClickTool\MouseClickTool.csproj">
+        <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <None Remove=".gitignore" />
+    <None Remove="x64.GZ" />
     <EmbeddedResource Include="x86.GZ" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Windows|x64' ">
-    <EmbeddedResource Include="x64.GZ" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Compile Include="App.cs" />
-    <Reference Include="System" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers.Unstable">
-      <Version>1.2.0.556</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="BeforeBuild" BeforeTargets="Build">
-    <MSBuild Projects="..\MouseClickTool.csproj" Targets="Build" />
-  </Target>
-  <Target Name="AfterBuild">
-    <MSBuild Condition="'$(Platform)' == 'x64'" Projects="$(MSBuildProjectFile)" Properties="Platform=x86;PlatFormTarget=x86" RunEachTargetSeparately="true" />
-  </Target>
-  <PropertyGroup>
-    <PostBuildEvent>rd /s /q "$(TargetDir)$(PlatformName)" &gt; NUL 2&gt;&amp;1 &amp;
-</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>cd "$(ProjectDir)" &amp;&amp; gen_pkg.bat</PreBuildEvent>
-  </PropertyGroup>
 </Project>
