@@ -1,8 +1,9 @@
 # MouseClickTool
 
-<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.jpg" alt="MouseClickTool Logo" width="96" />
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.jpg" alt="MouseClickTool Logo" width="64" />
 
 [![MouseClickTool Latest Version](https://img.shields.io/github/v/release/lalakii/MouseClickTool?logo=github)](https://github.com/lalakii/MouseClickTool/releases)
+[![Downloads](https://img.shields.io/github/downloads/lalakii/MouseClickTool/total)](https://github.com/lalakii/MouseClickTool/releases)
 [![MouseClickTool.exe Windows Program](https://img.shields.io/badge/windows-.exe-0078D4?logo=windows)](https://mouseclicktool.sourceforge.io/)
 
 [ [English](./README_en.md) | [简体中文](./README.md) ]
