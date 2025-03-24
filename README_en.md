@@ -36,7 +36,6 @@ Be careful when setting up hotkeys that they don't conflict with other programs.
 If you need to test the speed of a mouse clicker, I know these sites:
 
 - [Click test 10 seconds | CPS Check](https://cps-check.com/)
-- [CPS Test - Check Clicks per Second](https://cpstest.org/)
 - [CPS Test / CPS Tester - Check Your CPS with Clicks Tracking Chart](https://www.arealme.com/click-speed-test/)
 
 ## By lalaki.cn

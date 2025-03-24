@@ -40,7 +40,6 @@
 如果需要测试连点器速度，我知道这些网站：
 
 - [点击速度测试 10 秒](https://cps-check.com/cn/)
-- [CPS 測試 (CPS Test) 手速測試 - 測手速](https://cpstest.org/zh/)
 - [CPS 测试 - 鼠标点击速度测试](https://www.arealme.com/click-speed-test/cn/)
 
 ## By lalaki.cn
