@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("2.8.0.0")]
+[assembly: System.Reflection.AssemblyVersion("2.9.0.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
@@ -33,21 +33,21 @@ public class MouseClickTool : Form
         Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
-        Label dvl = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, tvl = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = dvl.TextAlign, AutoSize = true }, bc = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, bm = new() { AutoSize = true, Text = "—", Font = new(bc.Font.Name, bc.Font.Size * 0.8f), BackColor = bc.BackColor }, bh = new() { AutoSize = true, Text = "?", BackColor = bc.BackColor, Font = bc.Font }, hkl = new() { AutoSize = true, TextAlign = dvl.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, wb1 = new() { Text = cfg[6], AutoSize = true, TextAlign = dvl.TextAlign };
-        ComboBox ct = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, hk = new() { DropDownStyle = ct.DropDownStyle, FlatStyle = ct.FlatStyle };
-        DateTimePicker pk = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
-        TextBox dv = new(), pv = new();
+        Label a0 = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f), BackColor = t2.BackColor }, t0 = new() { AutoSize = true, Text = "?", BackColor = t2.BackColor, Font = t2.Font }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, c0 = new() { Text = cfg[6], AutoSize = true, TextAlign = a0.TextAlign };
+        ComboBox a2 = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, d1 = new() { DropDownStyle = a2.DropDownStyle, FlatStyle = a2.FlatStyle };
+        DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
+        TextBox a1 = new(), c1 = new();
         var startApp = false;
-        pv.TextChanged += (_, _) => cfg[startApp ? 9 : 4] = pv.Text;
-        Button bs = new() { AutoSize = true, Tag = cfg };
-        foreach (var c in (Control[])[bs, ct, hk, dv, dvl, hkl, tvl, pk, bc, bm, bh, wb1, pv])
+        c1.TextChanged += (_, _) => cfg[startApp ? 9 : 4] = c1.Text;
+        Button d2 = new() { AutoSize = true, Tag = cfg };
+        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1])
         {
             if (dark)
             {
                 c.ForeColor = Color.GhostWhite;
             }
 
-            if (c.BackColor != bc.BackColor)
+            if (c.BackColor != t2.BackColor)
             {
                 c.Font = new("Segoe UI", c.Font.Size);
                 if (dark)
@@ -60,160 +60,160 @@ public class MouseClickTool : Form
         }
 
         var strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
-        ct.DropDownWidth = TextRenderer.MeasureText(strRPress, ct.Font).Width;
-        ct.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress, cn ? "向上滚动(Scroll Up)" : "Scroll Up", cn ? "向下滚动(Scroll Down)" : "Scroll Down", cn ? "启动程序(Launch Program)" : "Launch Program"]);
+        a2.DropDownWidth = TextRenderer.MeasureText(strRPress, a2.Font).Width;
+        a2.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress, cn ? "向上滚动(Scroll Up)" : "Scroll Up", cn ? "向下滚动(Scroll Down)" : "Scroll Down", cn ? "启动程序(Launch Program)" : "Launch Program"]);
         for (int i = 1; i < 13; i++)
         {
-            hk.Items.Add($"F{i}");
+            d1.Items.Add($"F{i}");
         }
 
         const int hotkeyId = 0x233;
-        hk.SelectedIndexChanged += (_, _) =>
+        d1.SelectedIndexChanged += (_, _) =>
         {
             UnregisterHotKey(Handle, hotkeyId);
-            if (Enum.TryParse(hk.Text, out Keys key))
+            if (Enum.TryParse(d1.Text, out Keys key))
             {
                 RegisterHotKey(Handle, hotkeyId, 0x4000, key);
-                cfg[0] = hk.Text;
+                cfg[0] = d1.Text;
                 UpdateText();
             }
         };
         const int ft = 6;
-        dv.TextChanged += (_, _) => cfg[1] = dv.Text;
-        ct.SelectedIndexChanged += (_, _) =>
+        a1.TextChanged += (_, _) => cfg[1] = a1.Text;
+        a2.SelectedIndexChanged += (_, _) =>
         {
-            cfg[2] = $"{ct.SelectedIndex}";
-            startApp = ct.SelectedIndex == ct.Items.Count - 1;
+            cfg[2] = $"{a2.SelectedIndex}";
+            startApp = a2.SelectedIndex == a2.Items.Count - 1;
             if (startApp)
             {
-                pv.Text = cfg[9];
-                wb1.Text = cfg[8];
-                wb1.Left = dv.Left - wb1.Width - ft;
+                c1.Text = cfg[9];
+                c0.Text = cfg[8];
             }
             else
             {
-                pv.Text = cfg[4];
-                wb1.Text = cfg[7];
-                wb1.Left = dv.Left - wb1.Width - ft;
+                c1.Text = cfg[4];
+                c0.Text = cfg[7];
             }
+
+            c0.Left = a0.Width + a0.Left - c0.Width;
         };
-        bc.MouseEnter += (_, _) => bc.ForeColor = Color.IndianRed;
-        bc.MouseLeave += (_, _) => bc.ForeColor = bs.ForeColor;
-        bc.Click += (_, _) =>
+        t2.MouseEnter += (_, _) => t2.ForeColor = Color.IndianRed;
+        t2.MouseLeave += (_, _) => t2.ForeColor = d2.ForeColor;
+        t2.Click += (_, _) =>
         {
             Hide();
             z?.TrySetCanceled();
             Application.Exit();
         };
-        bm.MouseEnter += (_, _) => bm.ForeColor = Color.MediumPurple;
-        bm.MouseLeave += (_, _) => bm.ForeColor = bs.ForeColor;
-        bm.Click += (_, _) => WindowState = FormWindowState.Minimized;
-        bh.MouseEnter += (_, _) => bh.ForeColor = Color.DodgerBlue;
-        bh.MouseLeave += (_, _) => bh.ForeColor = bs.ForeColor;
-        bh.Click += (_, _) => ProcessStart("https://mouseclicktool.sourceforge.io");
+        t1.MouseEnter += (_, _) => t1.ForeColor = Color.MediumPurple;
+        t1.MouseLeave += (_, _) => t1.ForeColor = d2.ForeColor;
+        t1.Click += (_, _) => WindowState = FormWindowState.Minimized;
+        t0.MouseEnter += (_, _) => t0.ForeColor = Color.DodgerBlue;
+        t0.MouseLeave += (_, _) => t0.ForeColor = d2.ForeColor;
+        t0.Click += (_, _) => CreateProcess("https://mouseclicktool.sourceforge.io", null);
         Paint += (_, e) =>
         {
             WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
             using var g = e.Graphics;
-            g.DrawString(Text, new("Candara", 12f), new SolidBrush(bs.ForeColor), 5, 7);
+            g.DrawString(Text, new("Candara", 12f), new SolidBrush(d2.ForeColor), 5, 7);
             Pen p = new(Color.MediumPurple, 7f);
             g.DrawLine(p, Width, 0, 0, 0);
             p.Color = dark ? Color.LightGray : Color.FromArgb(50, 0, 0, 0);
             p.Width = .1f;
-            g.DrawRectangle(p, 5, dvl.Top - 5, Width - 12, Height - dvl.Top);
+            g.DrawRectangle(p, 5, a0.Top - 5, Width - 12, Height - a0.Top);
         };
         Load += (_, _) =>
         {
-            hk.Width = dv.Width = (int)DefaultFont.Size * 9;
-            Control a = dvl, b = hkl;
+            d1.Width = a1.Width = (int)DefaultFont.Size * 10;
+            Control a = a0, b = b0;
             if (b.Width > a.Width)
             {
-                a = hkl;
-                b = dvl;
+                a = b0;
+                b = a0;
             }
 
             a.Left = 8;
             b.Left = a.Left + a.Width - b.Width;
-            dvl.Top = bc.Height;
-            dv.Left = dvl.Left + dvl.Width + ft;
-            ct.Left = dv.Left + dv.Width + ft;
-            ct.Top = dvl.Top - DiffHeight(ct.Height, dv.Height);
-            dv.Top = dvl.Top - DiffHeight(dv.Height, ct.Height);
-            hkl.Top = dvl.Top + dvl.Height + 8;
-            wb1.Top = hkl.Top + hkl.Height + 8;
-            tvl.Top = wb1.Top + wb1.Height + 8;
-            tvl.Left = dvl.Width + dvl.Left - tvl.Width;
-            pk.Left = dv.Left;
-            wb1.Left = dvl.Width + dvl.Left - wb1.Width;
-            pv.Top = wb1.Top - DiffHeight(pv.Height, wb1.Height);
-            pv.Left = wb1.Left + wb1.Width + ft;
-            hk.Left = dv.Left;
-            hk.Top = tvl.Top - DiffHeight(hk.Height, hkl.Height);
-            pk.Top = hkl.Top - DiffHeight(pk.Height, hkl.Height);
-            bs.Left = ct.Left;
-            bs.Width = ct.DropDownWidth * 4 / (cn ? 8 : 5);
-            bs.Top = hk.Top - DiffHeight(bs.Height, hk.Height);
-            ct.Width = bs.Width;
-            pv.Width = ct.Left - dvl.Left - dvl.Width + ct.Width - ft;
-            Width = bs.Left + bs.Width + 12;
-            pk.Width = bs.Width + hk.Width + ft;
-            Height = bs.Top + bs.Height + ft;
-            bc.Left = Width - bc.Width - 4;
-            bm.Left = bc.Left - bc.Width;
-            bm.Top = DiffHeight(bc.Height, bm.Height);
-            bh.Left = bm.Left - bc.Width - 3;
+            a0.Top = t2.Height;
+            a1.Left = a0.Left + a0.Width + ft;
+            a2.Left = a1.Left + a1.Width + ft;
+            a2.Top = a0.Top - HeightDiff(a2.Height, a1.Height);
+            a1.Top = a0.Top - HeightDiff(a1.Height, a2.Height);
+            b0.Top = a0.Top + a0.Height + 8;
+            c0.Top = b0.Top + b0.Height + 8;
+            d0.Top = c0.Top + c0.Height + 8;
+            d0.Left = a0.Width + a0.Left - d0.Width;
+            b1.Left = a1.Left;
+            c0.Left = a0.Width + a0.Left - c0.Width;
+            c1.Top = c0.Top - HeightDiff(c1.Height, c0.Height);
+            c1.Left = c0.Left + c0.Width + ft;
+            d1.Left = a1.Left;
+            d1.Top = d0.Top - HeightDiff(d1.Height, b0.Height);
+            b1.Top = b0.Top - HeightDiff(b1.Height, b0.Height);
+            d2.Left = a2.Left;
+            d2.Width = a2.DropDownWidth * 4 / (cn ? 8 : 5);
+            d2.Top = d1.Top - HeightDiff(d2.Height, d1.Height);
+            a2.Width = d2.Width;
+            c1.Width = a2.Left - a0.Left - a0.Width + a2.Width - ft;
+            Width = d2.Left + d2.Width + 12;
+            b1.Width = d2.Width + d1.Width + ft;
+            Height = d2.Top + d2.Height + ft;
+            t2.Left = Width - t2.Width - 4;
+            t1.Left = t2.Left - t2.Width;
+            t1.Top = HeightDiff(t2.Height, t1.Height);
+            t0.Left = t1.Left - t2.Width - 3;
         };
-        var fCfg = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
-        if (File.Exists(fCfg))
+        var ini = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
+        if (File.Exists(ini))
         {
-            var tCfg = File.ReadAllLines(fCfg);
+            var tCfg = File.ReadAllLines(ini);
             cfg = (tCfg.Length == cfg.Length) ? tCfg : cfg;
         }
 
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
-        hk.SelectedItem = cfg[0];
-        dv.Text = cfg[1];
-        ct.SelectedIndex = ctv;
+        d1.SelectedItem = cfg[0];
+        a1.Text = cfg[1];
+        a2.SelectedIndex = ctv;
         FormClosing += (_, _) =>
         {
             try
             {
-                File.WriteAllLines(fCfg, cfg);
+                File.WriteAllLines(ini, cfg);
             }
             catch
             {
             }
         };
-        bs.Click += (_, _) =>
+        d2.Click += (_, _) =>
         {
-            bs.Enabled = false;
-            if (ct.Enabled && z == null)
+            d2.Enabled = false;
+            if (a2.Enabled && z == null)
             {
-                if (int.TryParse(dv.Text, out int delay) && delay > -1)
+                if (int.TryParse(a1.Text, out int delay) && delay > -1)
                 {
-                    dv.Enabled = ct.Enabled = pk.Enabled = pv.Enabled = false;
+                    a1.Enabled = a2.Enabled = b1.Enabled = c1.Enabled = false;
                     var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
                     var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
-                    if ((ct.SelectedIndex & 1) == 1)
+                    if ((a2.SelectedIndex & 1) == 1)
                     {
                         downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
                         upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
                     }
 
-                    var mouseWheel = ct.SelectedIndex > 3;
+                    var mouseWheel = a2.SelectedIndex > 3;
                     if (mouseWheel)
                     {
                         downFlag = MouseEventFlag.MOUSEEVENTF_WHEEL;
                         int.TryParse(cfg[3], NumberStyles.Integer, cl, out int sc);
-                        m.mi.mouseData = ct.SelectedIndex > 4 ? -sc : sc;
+                        m.mi.mouseData = a2.SelectedIndex > 4 ? -sc : sc;
                     }
 
-                    var longPress = ct.SelectedIndex > 1;
+                    var longPress = a2.SelectedIndex > 1;
                     Task.Run(async () =>
                     {
                         for (int i = 1; i < wait; i++)
                         {
-                            Invoke(() => bs.Text = $"{wait - i}");
+                            Invoke(() => d2.Text = $"{wait - i}");
                             await Task.Delay(1000);
                         }
 
@@ -221,8 +221,8 @@ public class MouseClickTool : Form
                         var size = Marshal.SizeOf(m);
                         z = new();
                         Invoke(() => UpdateText());
-                        var tg = pk.Value < DateTime.Now;
-                        uint.TryParse(pv.Text.Trim(), NumberStyles.Integer, cl, out uint num);
+                        var tg = b1.Value < DateTime.Now;
+                        uint.TryParse(c1.Text.Trim(), NumberStyles.Integer, cl, out uint num);
                         for (ulong count = 0; num < 1 || count < num; count++)
                         {
                             if (z?.Task.IsCanceled == true)
@@ -234,11 +234,14 @@ public class MouseClickTool : Form
                             {
                                 if (startApp)
                                 {
-                                    if (File.Exists(pv.Text))
+                                    int idx = c1.Text.IndexOf(' ');
+                                    string? args = null;
+                                    if (idx != -1)
                                     {
-                                        ProcessStart(pv.Text);
+                                        args = c1.Text.Substring(idx);
                                     }
 
+                                    CreateProcess(c1.Text.Split(' ')[0], args);
                                     break;
                                 }
                                 else
@@ -263,7 +266,7 @@ public class MouseClickTool : Form
                             }
                             else
                             {
-                                tg = pk.Value < DateTime.Now;
+                                tg = b1.Value < DateTime.Now;
                             }
 
                             if (delay != 0)
@@ -282,8 +285,8 @@ public class MouseClickTool : Form
                         z = null;
                         Invoke(() =>
                         {
-                            dv.Enabled = ct.Enabled = pk.Enabled = pv.Enabled = true;
-                            pk.Value = DateTime.Now;
+                            a1.Enabled = a2.Enabled = b1.Enabled = c1.Enabled = true;
+                            b1.Value = DateTime.Now;
                             UpdateText();
                         });
                     });
@@ -335,25 +338,25 @@ public class MouseClickTool : Form
         }
     }
 
-    private static int DiffHeight(int h0, int h1)
-    {
-        int value = h0 - h1;
-        int mask = value >> 31;
-        return ((value + mask) ^ mask) / 2;
-    }
-
-    private static void ProcessStart(string path)
+    private static void CreateProcess(string path, string? args)
     {
         new Thread(() =>
         {
             try
             {
-                System.Diagnostics.Process.Start(path);
+                System.Diagnostics.Process.Start(path, args);
             }
             catch
             {
             }
         }).Start();
+    }
+
+    private static int HeightDiff(int h0, int h1)
+    {
+        int value = h0 - h1;
+        int mask = value >> 31;
+        return ((value + mask) ^ mask) / 2;
     }
 
     [DllImport("user32.dll")]
