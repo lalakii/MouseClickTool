@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("2.9.0.0")]
+[assembly: System.Reflection.AssemblyVersion("2.9.1.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form

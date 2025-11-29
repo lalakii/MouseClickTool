@@ -1,7 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Reflection;
 
-[assembly: AssemblyVersion("2.9.0.0")]
+[assembly: AssemblyVersion("2.9.1.0")]
 [assembly: AssemblyTitle("MouseClickTool minimal")]
 [assembly: AssemblyProduct("MouseClickTool minimal")]
 [assembly: AssemblyCopyright("Copyright (C) 2025 lalaki.cn")]
