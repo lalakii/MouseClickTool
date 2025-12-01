@@ -13,6 +13,7 @@ public class MouseClickTool : Form
     private int wait = 3;
     private TaskCompletionSource<int>? z;
     private bool useRandomInterval;
+    private string[] cfg;
 
     public MouseClickTool()
     {
@@ -31,7 +32,7 @@ public class MouseClickTool : Form
 
         var cl = InputLanguage.CurrentInputLanguage.Culture;
         var cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
-        string[] cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty];
+        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty];
         Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -395,7 +396,6 @@ public class MouseClickTool : Form
 
     private void UpdateText()
     {
-        var cfg = (string[])Controls[0].Tag;
         Controls[0].Text = $"{(z == null ? cfg[5] : cfg[6])}({cfg[0]})";
         Controls[0].Enabled = true;
     }
