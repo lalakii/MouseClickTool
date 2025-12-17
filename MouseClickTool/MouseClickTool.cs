@@ -3,14 +3,17 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("2.9.0.0")]
+[assembly: System.Reflection.AssemblyVersion("2.9.1.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
 {
+    private readonly Random useRandom = new Random();
     private Input m;
     private int wait = 3;
     private TaskCompletionSource<int>? z;
+    private bool useRandomInterval;
+    private string[] cfg;
 
     public MouseClickTool()
     {
@@ -29,7 +32,7 @@ public class MouseClickTool : Form
 
         var cl = InputLanguage.CurrentInputLanguage.Culture;
         var cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
-        string[] cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty];
+        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty];
         Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -37,10 +40,17 @@ public class MouseClickTool : Form
         ComboBox a2 = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, d1 = new() { DropDownStyle = a2.DropDownStyle, FlatStyle = a2.FlatStyle };
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox a1 = new(), c1 = new();
+
+        CheckBox randomCheckBox = new() { Text = "开启随机间隔", AutoSize = true, Checked = false };
+        randomCheckBox.CheckedChanged += (sender, e) =>
+        {
+            useRandomInterval = randomCheckBox.Checked;
+        };
+
         var startApp = false;
         c1.TextChanged += (_, _) => cfg[startApp ? 9 : 4] = c1.Text;
         Button d2 = new() { AutoSize = true, Tag = cfg };
-        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1])
+        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, randomCheckBox])
         {
             if (dark)
             {
@@ -162,6 +172,10 @@ public class MouseClickTool : Form
             t1.Left = t2.Left - t2.Width;
             t1.Top = HeightDiff(t2.Height, t1.Height);
             t0.Left = t1.Left - t2.Width - 3;
+
+            randomCheckBox.Left = d0.Left;
+            randomCheckBox.Top = d2.Bottom + 8;
+            this.Height = randomCheckBox.Bottom + 15;
         };
         var ini = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
         if (File.Exists(ini))
@@ -271,7 +285,15 @@ public class MouseClickTool : Form
 
                             if (delay != 0)
                             {
-                                await Task.WhenAny(Task.Delay(delay), z?.Task);
+                                int actualDelay = delay;
+                                if (useRandomInterval)
+                                {
+                                    // 随机系数：0.8 ~ 1.2
+                                    double randomFactor = (useRandom.NextDouble() * 0.4) + 0.8;
+                                    actualDelay = (int)Math.Round(delay * randomFactor);
+                                }
+
+                                await Task.WhenAny(Task.Delay(actualDelay), z?.Task);
                             }
                         }
 
@@ -374,7 +396,6 @@ public class MouseClickTool : Form
 
     private void UpdateText()
     {
-        var cfg = (string[])Controls[0].Tag;
         Controls[0].Text = $"{(z == null ? cfg[5] : cfg[6])}({cfg[0]})";
         Controls[0].Enabled = true;
     }
