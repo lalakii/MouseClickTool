@@ -32,11 +32,11 @@ public class MouseClickTool : Form
 
         var cl = InputLanguage.CurrentInputLanguage.Culture;
         var cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
-        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty];
+        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty, string.Empty];
         Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
-        Label a0 = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f), BackColor = t2.BackColor }, t0 = new() { AutoSize = true, Text = "?", BackColor = t2.BackColor, Font = t2.Font }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, c0 = new() { Text = cfg[6], AutoSize = true, TextAlign = a0.TextAlign };
+        Label a0 = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f), BackColor = t2.BackColor }, t0 = new() { AutoSize = true, Text = "?", BackColor = t2.BackColor, Font = t2.Font }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, c0 = new() { Text = cfg[6], AutoSize = true, TextAlign = a0.TextAlign }, e0 = new() { AutoSize = true, TextAlign = ContentAlignment.BottomRight };
         ComboBox a2 = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, d1 = new() { DropDownStyle = a2.DropDownStyle, FlatStyle = a2.FlatStyle };
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox a1 = new(), c1 = new();
@@ -44,13 +44,14 @@ public class MouseClickTool : Form
         CheckBox randomCheckBox = new() { Text = cn ? "随机间隔" : "Random Interval", AutoSize = true, Checked = false };
         randomCheckBox.CheckedChanged += (sender, e) =>
         {
-            useRandomInterval = randomCheckBox.Checked;
+            this.useRandomInterval = randomCheckBox.Checked;
+            cfg[10] = $"{this.useRandomInterval}";
         };
 
         var startApp = false;
         c1.TextChanged += (_, _) => cfg[startApp ? 9 : 4] = c1.Text;
         Button d2 = new() { AutoSize = true, Tag = cfg };
-        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, randomCheckBox])
+        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, randomCheckBox, e0])
         {
             if (dark)
             {
@@ -167,7 +168,6 @@ public class MouseClickTool : Form
             c1.Width = a2.Left - a0.Left - a0.Width + a2.Width - ft;
             Width = d2.Left + d2.Width + 12;
             b1.Width = d2.Width + d1.Width + ft;
-            Height = d2.Top + d2.Height + ft;
             t2.Left = Width - t2.Width - 4;
             t1.Left = t2.Left - t2.Width;
             t1.Top = HeightDiff(t2.Height, t1.Height);
@@ -175,7 +175,8 @@ public class MouseClickTool : Form
 
             randomCheckBox.Left = d0.Left;
             randomCheckBox.Top = d2.Bottom + 8;
-            this.Height = randomCheckBox.Bottom + 15;
+            e0.Top = randomCheckBox.Top - HeightDiff(randomCheckBox.Height, e0.Height);
+            Height = randomCheckBox.Bottom + ft;
         };
         var ini = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
         if (File.Exists(ini))
@@ -188,16 +189,18 @@ public class MouseClickTool : Form
         d1.SelectedItem = cfg[0];
         a1.Text = cfg[1];
         a2.SelectedIndex = ctv;
+        _ = bool.TryParse(cfg[10], out bool useRandomInterval);
+        randomCheckBox.Checked = useRandomInterval;
         FormClosing += (_, _) =>
-        {
-            try
-            {
-                File.WriteAllLines(ini, cfg);
-            }
-            catch
-            {
-            }
-        };
+       {
+           try
+           {
+               File.WriteAllLines(ini, cfg);
+           }
+           catch
+           {
+           }
+       };
         d2.Click += (_, _) =>
         {
             d2.Enabled = false;
@@ -236,8 +239,10 @@ public class MouseClickTool : Form
                         z = new();
                         Invoke(() => UpdateText());
                         var tg = b1.Value < DateTime.Now;
-                        uint.TryParse(c1.Text.Trim(), NumberStyles.Integer, cl, out uint num);
-                        for (ulong count = 0; num < 1 || count < num; count++)
+                        ulong.TryParse(c1.Text.Trim(), NumberStyles.Integer, cl, out ulong num);
+                        var unrestricted = num < 1;
+                        Invoke(() => e0.Visible = !unrestricted);
+                        for (ulong count = 0; unrestricted || count < num; count++)
                         {
                             if (z?.Task.IsCanceled == true)
                             {
@@ -248,14 +253,7 @@ public class MouseClickTool : Form
                             {
                                 if (startApp)
                                 {
-                                    int idx = c1.Text.IndexOf(' ');
-                                    string? args = null;
-                                    if (idx != -1)
-                                    {
-                                        args = c1.Text.Substring(idx);
-                                    }
-
-                                    CreateProcess(c1.Text, args);
+                                    CreateProcess("cmd.exe", $"/c start {c1.Text}");
                                     break;
                                 }
                                 else
@@ -276,6 +274,12 @@ public class MouseClickTool : Form
                                         m.mi.dwFlags = upFlag;
                                         pressed = true;
                                     }
+
+                                    Invoke(() =>
+                                    {
+                                        e0.Text = $"{(cn ? "剩余次数" : "Remaining Runs")}:{num - count - 1}";
+                                        e0.Left = Width - e0.Width - 12;
+                                    });
                                 }
                             }
                             else
