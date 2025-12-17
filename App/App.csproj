@@ -28,6 +28,7 @@
     </ProjectReference>
     <None Remove=".gitignore" />
     <None Remove="x64.GZ" />
+    <None Remove="x86.GZ" />
     <EmbeddedResource Include="x86.GZ" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
       <PrivateAssets>all</PrivateAssets>

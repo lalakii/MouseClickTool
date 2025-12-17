@@ -8,12 +8,12 @@ using System.Windows.Forms;
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
 {
-    private readonly Random useRandom = new Random();
+    private readonly Random useRandom = new();
+    private readonly string[] cfg;
     private Input m;
     private int wait = 3;
     private TaskCompletionSource<int>? z;
     private bool useRandomInterval;
-    private string[] cfg;
 
     public MouseClickTool()
     {
@@ -41,7 +41,7 @@ public class MouseClickTool : Form
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox a1 = new(), c1 = new();
 
-        CheckBox randomCheckBox = new() { Text = "开启随机间隔", AutoSize = true, Checked = false };
+        CheckBox randomCheckBox = new() { Text = cn ? "随机间隔" : "Random Interval", AutoSize = true, Checked = false };
         randomCheckBox.CheckedChanged += (sender, e) =>
         {
             useRandomInterval = randomCheckBox.Checked;
@@ -255,7 +255,7 @@ public class MouseClickTool : Form
                                         args = c1.Text.Substring(idx);
                                     }
 
-                                    CreateProcess(c1.Text.Split(' ')[0], args);
+                                    CreateProcess(c1.Text, args);
                                     break;
                                 }
                                 else
@@ -362,7 +362,7 @@ public class MouseClickTool : Form
 
     private static void CreateProcess(string path, string? args)
     {
-        new Thread(() =>
+        ThreadPool.QueueUserWorkItem(_ =>
         {
             try
             {
@@ -371,7 +371,7 @@ public class MouseClickTool : Form
             catch
             {
             }
-        }).Start();
+        });
     }
 
     private static int HeightDiff(int h0, int h1)
