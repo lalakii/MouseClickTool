@@ -20,10 +20,11 @@
 - 支持指定时间触发 / 定时启动外部程序
 - 已适配深色模式
 - 自动记忆配置参数，配置文件存储在系统临时目录，不污染注册表
+- 支持自定义脚本(Beta)
 
 ## 下载
 
-[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-exxxd) | [蓝奏云](https://a01.lanzout.com/b0hdksmgh) **密码：bj5r**
+[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-Upxxd) | [蓝奏云](https://a01.lanzout.com/b0hdkyc4b) **密码：86ke**
 
 <img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="MouseClickTool MainForm"/>
 
@@ -41,5 +42,43 @@
 
 - [点击速度测试 10 秒](https://cps-check.com/cn/)
 - [CPS 测试 - 鼠标点击速度测试](https://www.arealme.com/click-speed-test/cn/)
+
+## 编写自定义脚本
+
+MouseClickTool 脚本文件，文件后缀名为"*.msck"
+  1.注释使用'#'开头
+  2.注释应当另起一行，不要和代码混在一起
+  3.代码所在的行，不应出现多余空格
+  4.文件内的空行不会影响脚本执行，为了便于阅读可以多加空行
+
+  [查看Demo脚本示例](./Scripts/demo.msck)
+
+```c
+# 等待n毫秒, 1个参数
+delay(ms)
+
+# 鼠标左键单击, 2个参数，x,y坐标
+left_click(x,y)
+
+# 鼠标右键单击, 2个参数, x,y坐标
+right_click(x,y)
+
+# 左键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开) 
+# 长按时需要注意顺序，必须先按下再松开，搭配delay可以实现长按的时间
+left_click_long(x,y,type)
+
+# 右键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开)
+right_click_long(x,y,type)
+
+# 鼠标滚轮滚动, 1个参数, value可以为是正数或负数, 分别是向上或向下滚动
+mouse_wheel(value)
+
+# 启动程序, 1个参数, fileName表示程序完整路径, 可携带参数
+create_process("fileName")
+
+# 仅执行一次退出, 无参数, 需要循环执行时不添加
+once()
+
+```
 
 ## By lalaki.cn
