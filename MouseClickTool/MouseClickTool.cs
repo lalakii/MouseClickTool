@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("2.9.1.0")]
+[assembly: System.Reflection.AssemblyVersion("2.9.2.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
@@ -14,6 +14,7 @@ public class MouseClickTool : Form
     private int wait = 3;
     private TaskCompletionSource<int>? z;
     private bool useRandomInterval;
+    private bool saveLog;
 
     public MouseClickTool()
     {
@@ -32,7 +33,7 @@ public class MouseClickTool : Form
 
         var cl = InputLanguage.CurrentInputLanguage.Culture;
         var cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
-        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty, string.Empty];
+        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty, string.Empty, cn ? "脚本文件(File):" : "Load Script File:", string.Empty, string.Empty];
         Text = $"MouseClickTool {(Environment.Is64BitProcess ? " x64" : " x86")}";
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -41,17 +42,27 @@ public class MouseClickTool : Form
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox a1 = new(), c1 = new();
 
-        CheckBox randomCheckBox = new() { Text = cn ? "随机间隔" : "Random Interval", AutoSize = true, Checked = false };
-        randomCheckBox.CheckedChanged += (sender, e) =>
+        CheckBox randomCheckBox = new() { Text = cn ? "随机扰动" : "Random Perturbation", AutoSize = true, Checked = false }, logCbx = new() { Text = cn ? "记录日志" : "Record Logs", AutoSize = true, Checked = false };
+        randomCheckBox.CheckedChanged += (_, _) =>
         {
-            this.useRandomInterval = randomCheckBox.Checked;
-            cfg[10] = $"{this.useRandomInterval}";
+            useRandomInterval = randomCheckBox.Checked;
+            cfg[10] = $"{useRandomInterval}";
+        };
+        logCbx.CheckedChanged += (_, _) =>
+        {
+            saveLog = logCbx.Checked;
+            cfg[13] = $"{saveLog}";
         };
 
-        var startApp = false;
-        c1.TextChanged += (_, _) => cfg[startApp ? 9 : 4] = c1.Text;
+        var runMode = 0; // 0 default, 1 createProcess, 2 runAsScript
+        c1.TextChanged += (_, _) => cfg[a2.SelectedIndex switch
+        {
+            6 => 9,
+            7 => 12,
+            _ => 4,
+        }] = c1.Text;
         Button d2 = new() { AutoSize = true, Tag = cfg };
-        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, randomCheckBox, e0])
+        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, randomCheckBox, e0, logCbx])
         {
             if (dark)
             {
@@ -72,7 +83,7 @@ public class MouseClickTool : Form
 
         var strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
         a2.DropDownWidth = TextRenderer.MeasureText(strRPress, a2.Font).Width;
-        a2.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress, cn ? "向上滚动(Scroll Up)" : "Scroll Up", cn ? "向下滚动(Scroll Down)" : "Scroll Down", cn ? "启动程序(Launch Program)" : "Launch Program"]);
+        a2.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress, cn ? "向上滚动(Scroll Up)" : "Scroll Up", cn ? "向下滚动(Scroll Down)" : "Scroll Down", cn ? "启动程序(Launch Program)" : "Launch Program", cn ? "自定义脚本(Custom Script)" : "Custom Script"]);
         for (int i = 1; i < 13; i++)
         {
             d1.Items.Add($"F{i}");
@@ -94,28 +105,46 @@ public class MouseClickTool : Form
         a2.SelectedIndexChanged += (_, _) =>
         {
             cfg[2] = $"{a2.SelectedIndex}";
-            startApp = a2.SelectedIndex == a2.Items.Count - 1;
-            if (startApp)
+            switch (a2.SelectedIndex)
             {
-                c1.Text = cfg[9];
-                c0.Text = cfg[8];
-            }
-            else
-            {
-                c1.Text = cfg[4];
-                c0.Text = cfg[7];
+                case 6:
+                    c0.Text = cfg[8];
+                    c1.Text = cfg[9];
+                    runMode = 1;
+                    break;
+                case 7:
+                    c0.Text = cfg[11];
+                    c1.Text = cfg[12];
+                    runMode = 2;
+                    break;
+                default:
+                    c0.Text = cfg[7];
+                    c1.Text = cfg[4];
+                    runMode = 0;
+                    break;
             }
 
             c0.Left = a0.Width + a0.Left - c0.Width;
         };
+        c1.Click += (_, _) =>
+        {
+            if (a2.SelectedIndex > 5)
+            {
+                using OpenFileDialog fd = new() { CheckFileExists = true, CheckPathExists = true, Multiselect = false, Filter = runMode == 1 ? "*.*|*.*" : $"*.msck ({(cn ? "MouseClickTool脚本" : "MouseClickTool Scripts")})|*.msck" };
+                if (fd.ShowDialog() == DialogResult.OK)
+                {
+                    c1.Text = fd.FileName;
+                }
+            }
+        };
         t2.MouseEnter += (_, _) => t2.ForeColor = Color.IndianRed;
         t2.MouseLeave += (_, _) => t2.ForeColor = d2.ForeColor;
         t2.Click += (_, _) =>
-        {
-            Hide();
-            z?.TrySetCanceled();
-            Application.Exit();
-        };
+            {
+                Hide();
+                z?.TrySetCanceled();
+                Application.Exit();
+            };
         t1.MouseEnter += (_, _) => t1.ForeColor = Color.MediumPurple;
         t1.MouseLeave += (_, _) => t1.ForeColor = d2.ForeColor;
         t1.Click += (_, _) => WindowState = FormWindowState.Minimized;
@@ -172,13 +201,14 @@ public class MouseClickTool : Form
             t1.Left = t2.Left - t2.Width;
             t1.Top = HeightDiff(t2.Height, t1.Height);
             t0.Left = t1.Left - t2.Width - 3;
-
             randomCheckBox.Left = d0.Left;
             randomCheckBox.Top = d2.Bottom + 8;
             e0.Top = randomCheckBox.Top - HeightDiff(randomCheckBox.Height, e0.Height);
+            logCbx.Left = randomCheckBox.Left + randomCheckBox.Width + ft;
+            logCbx.Top = randomCheckBox.Top;
             Height = randomCheckBox.Bottom + ft;
         };
-        var ini = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
+        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
         if (File.Exists(ini))
         {
             var tCfg = File.ReadAllLines(ini);
@@ -189,18 +219,20 @@ public class MouseClickTool : Form
         d1.SelectedItem = cfg[0];
         a1.Text = cfg[1];
         a2.SelectedIndex = ctv;
-        _ = bool.TryParse(cfg[10], out bool useRandomInterval);
+        _ = bool.TryParse(cfg[10], out useRandomInterval);
+        _ = bool.TryParse(cfg[13], out saveLog);
+        logCbx.Checked = saveLog;
         randomCheckBox.Checked = useRandomInterval;
         FormClosing += (_, _) =>
-       {
-           try
-           {
-               File.WriteAllLines(ini, cfg);
-           }
-           catch
-           {
-           }
-       };
+        {
+            try
+            {
+                File.WriteAllLines(ini, cfg);
+            }
+            catch
+            {
+            }
+        };
         d2.Click += (_, _) =>
         {
             d2.Enabled = false;
@@ -242,6 +274,24 @@ public class MouseClickTool : Form
                         ulong.TryParse(c1.Text.Trim(), NumberStyles.Integer, cl, out ulong num);
                         var unrestricted = num < 1;
                         Invoke(() => e0.Visible = !unrestricted);
+                        var runAsScript = runMode == 2;
+                        string[]? scriptArr = null;
+                        var scriptIndex = 0;
+                        var scriptCount = 0;
+                        if (runAsScript)
+                        {
+                            var scriptFile = c1.Text.Trim();
+                            if (File.Exists(scriptFile))
+                            {
+                                scriptArr = File.ReadAllLines(scriptFile);
+                                scriptCount = scriptArr.Length;
+                            }
+                            else
+                            {
+                                z?.TrySetCanceled();
+                            }
+                        }
+
                         for (ulong count = 0; unrestricted || count < num; count++)
                         {
                             if (z?.Task.IsCanceled == true)
@@ -251,10 +301,128 @@ public class MouseClickTool : Form
 
                             if (tg)
                             {
-                                if (startApp)
+                                if (runMode == 1)
                                 {
-                                    CreateProcess("cmd.exe", $"/c start {c1.Text}");
+                                    CreateProcess("cmd.exe", $"/c \"{c1.Text}\"");
                                     break;
+                                }
+                                else if (runAsScript)
+                                {
+                                    // run as script
+                                    if (scriptArr != null)
+                                    {
+                                        if (scriptIndex > scriptCount - 1)
+                                        {
+                                            scriptIndex = 0;
+                                        }
+
+                                        var rawLine = scriptArr[scriptIndex].Trim().TrimEnd(')');
+                                        var rIndex = rawLine.IndexOf('(');
+                                        string[]? scriptLine = null;
+                                        if (rIndex != -1)
+                                        {
+                                            scriptLine = new string[2];
+                                            scriptLine[0] = rawLine.Substring(0, rIndex);
+                                            scriptLine[1] = rawLine.Substring(rIndex + 1);
+                                        }
+
+                                        scriptIndex++;
+                                        if (scriptLine == null || scriptLine[0].StartsWith("#"))
+                                        {
+                                            continue;
+                                        }
+
+                                        if (scriptLine.Length > 1)
+                                        {
+                                            var eventType = scriptLine[0];
+                                            var scriptCommand = scriptLine[1];
+                                            var args = scriptCommand.Split(',');
+                                            var clickSimple = false;
+                                            var left = false;
+                                            if (args.Length > 1)
+                                            {
+                                                _ = int.TryParse(args[0], out int posX);
+                                                _ = int.TryParse(args[1], out int posY);
+                                                var screen = Screen.PrimaryScreen.Bounds;
+                                                m.mi.dx = posX * 65535 / screen.Width;
+                                                m.mi.dy = posY * 65535 / screen.Height;
+                                                m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_MOVE | MouseEventFlag.MOUSEEVENTF_ABSOLUTE;
+                                                _ = SendInput(1, ref m, size);
+                                            }
+
+                                            if (saveLog)
+                                            {
+                                                try
+                                                {
+                                                    File.AppendAllText("MouseClickTool.LOG", $"[{DateTime.Now}] {eventType} {scriptCommand}\r\n");
+                                                }
+                                                catch
+                                                {
+                                                }
+                                            }
+
+                                            switch (eventType)
+                                            {
+                                                case "delay":
+                                                    if (int.TryParse(scriptCommand, out delay))
+                                                    {
+                                                        await Task.WhenAny(Task.Delay(delay), z?.Task);
+                                                    }
+
+                                                    break;
+                                                case "left_click":
+                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                                                    left = clickSimple = true;
+                                                    break;
+                                                case "right_click":
+                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                                                    clickSimple = true;
+                                                    break;
+                                                case "left_click_long":
+                                                    var eventFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                                                    if (args.Length > 2 && args[2].Contains("1"))
+                                                    {
+                                                        eventFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                                                    }
+
+                                                    m.mi.dwFlags = eventFlag;
+                                                    _ = SendInput(1, ref m, size);
+                                                    break;
+                                                case "right_click_long":
+                                                    eventFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                                                    if (args.Length > 2 && args[2].Contains("1"))
+                                                    {
+                                                        eventFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                                                    }
+
+                                                    m.mi.dwFlags = eventFlag;
+                                                    _ = SendInput(1, ref m, size);
+                                                    break;
+                                                case "mouse_wheel":
+                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_WHEEL;
+                                                    int.TryParse(args[0], NumberStyles.Integer, cl, out int sc);
+                                                    m.mi.mouseData = sc;
+                                                    break;
+                                                case "create_process":
+                                                    CreateProcess("cmd.exe", $"/c {scriptCommand}");
+                                                    continue;
+                                                case "once":
+                                                    z?.TrySetCanceled();
+                                                    continue;
+                                                default:
+                                                    continue;
+                                            }
+
+                                            _ = SendInput(1, ref m, size);
+                                            if (clickSimple)
+                                            {
+                                                m.mi.dwFlags = left ? MouseEventFlag.MOUSEEVENTF_LEFTUP : MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                                                _ = SendInput(1, ref m, size);
+                                            }
+                                        }
+
+                                        continue;
+                                    }
                                 }
                                 else
                                 {
@@ -338,6 +506,8 @@ public class MouseClickTool : Form
         MOUSEEVENTF_RIGHTDOWN = 0x0008,
         MOUSEEVENTF_RIGHTUP = 0x0010,
         MOUSEEVENTF_WHEEL = 0x0800,
+        MOUSEEVENTF_MOVE = 0x0001,
+        MOUSEEVENTF_ABSOLUTE = 0x8000,
     }
 
     protected override CreateParams CreateParams
@@ -366,7 +536,8 @@ public class MouseClickTool : Form
 
     private static void CreateProcess(string path, string? args)
     {
-        ThreadPool.QueueUserWorkItem(_ =>
+        ThreadPool.UnsafeQueueUserWorkItem(
+            _ =>
         {
             try
             {
@@ -375,7 +546,8 @@ public class MouseClickTool : Form
             catch
             {
             }
-        });
+        },
+            0);
     }
 
     private static int HeightDiff(int h0, int h1)

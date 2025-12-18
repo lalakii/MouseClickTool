@@ -1,17 +1,16 @@
 ﻿using System.IO.Compression;
 using System.Reflection;
 
-[assembly: AssemblyVersion("2.9.1.0")]
+[assembly: AssemblyVersion("2.9.2.0")]
 [assembly: AssemblyTitle("MouseClickTool")]
 [assembly: AssemblyProduct("MouseClickTool")]
-[assembly: AssemblyCopyright("Copyright (C) 2025 lalaki.cn")]
+[assembly: AssemblyCopyright("Copyright (C) 2026 lalaki.cn")]
 
 // main.
-Type t;
-using var f = File.Create(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
-var r = Assembly.GetEntryAssembly();
-new GZipStream(r.GetManifestResourceStream(r.GetManifestResourceNames()[0]), CompressionMode.Decompress).CopyTo(f);
-f.Position = 0L;
-t = Assembly.Load(new BinaryReader(f).ReadBytes((int)f.Length)).GetExportedTypes()[0];
-f.SetLength(0L);
-Activator.CreateInstance(t);
+var p = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+using (var f = File.Create(p))
+{
+    new GZipStream(Assembly.GetEntryAssembly().GetManifestResourceStream("App.x86.GZ"), CompressionMode.Decompress).CopyTo(f);
+}
+
+Activator.CreateInstanceFrom(p, "MouseClickTool");
