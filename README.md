@@ -20,7 +20,7 @@
 - 支持指定时间触发 / 定时启动外部程序
 - 已适配深色模式
 - 自动记忆配置参数，配置文件存储在系统临时目录，不污染注册表
-- 支持自定义脚本(Beta)
+- 支持自定义脚本(Beta) [如何编写脚本?](https://github.com/lalakii/MouseClickTool?tab=readme-ov-file#%E7%BC%96%E5%86%99%E8%87%AA%E5%AE%9A%E4%B9%89%E8%84%9A%E6%9C%AC)
 
 ## 下载
 
