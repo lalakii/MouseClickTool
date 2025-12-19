@@ -37,7 +37,7 @@ The MouseClickTool script file has the extension "*.msck".
   + There should be no extra spaces on the line containing the code
   + Blank lines within the file will not affect script execution; additional blank lines can be added for easier readability.
 
-  [Demo script example](./Scripts/demo.msck)
+  [Demo script example](./Scripts/demo_en.msck)
 
 ```c
 # Wait N milliseconds, 1 parameter
@@ -71,7 +71,7 @@ once()
 
 If the tool cannot click in certain applications or games, try running it as Administrator or with TrustedInstaller privileges.
 
-Here's a privilege escalation tool: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/).
+Here's a helpful tool for running with elevated privileges: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/).
 
 Be careful when setting up hotkeys that they don't conflict with other programs.
 

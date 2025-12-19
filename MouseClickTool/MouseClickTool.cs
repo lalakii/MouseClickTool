@@ -1,15 +1,12 @@
 ﻿using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Windows.Forms;
-
-[assembly: System.Reflection.AssemblyVersion("2.9.2.0")]
 
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
 {
-    private readonly RNGCryptoServiceProvider p = new();
+    private readonly System.Security.Cryptography.RNGCryptoServiceProvider p = new();
     private readonly string[] cfg;
     private Input m;
     private int wait = 3;

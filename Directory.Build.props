@@ -1,0 +1,24 @@
+<Project>
+  <PropertyGroup>
+    <Copyright>Copyright (C) 2026 lalaki.cn</Copyright>
+    <Version>2.9.2.0</Version>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <DebugType>none</DebugType>
+    <GenerateSupportedRuntime>False</GenerateSupportedRuntime>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPublishable>False</IsPublishable>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <NoWin32Manifest>true</NoWin32Manifest>
+    <NoWarn>SA1101;SA1633;SA1307;SA0001;</NoWarn>
+    <OutputType>WinExe</OutputType>
+    <Optimize>True</Optimize>
+    <Prefer32Bit>False</Prefer32Bit>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <TargetFrameworks>net462</TargetFrameworks>
+    <WarningLevel>9999</WarningLevel>
+  </PropertyGroup>
+</Project>

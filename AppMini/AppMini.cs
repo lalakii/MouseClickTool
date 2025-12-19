@@ -1,11 +1,6 @@
 ﻿using System.IO.Compression;
 using System.Reflection;
 
-[assembly: AssemblyVersion("2.9.2.0")]
-[assembly: AssemblyTitle("MouseClickTool minimal")]
-[assembly: AssemblyProduct("MouseClickTool minimal")]
-[assembly: AssemblyCopyright("Copyright (C) 2026 lalaki.cn")]
-
 // main.
 var a = Environment.Is64BitProcess ? "x64" : "x86";
 var p = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{DateTime.Now:yyyy-MM}_{a}.dll");

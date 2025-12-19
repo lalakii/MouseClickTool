@@ -1,0 +1,66 @@
+# MouseClickTool Script Files (extension: "*.msck")
+# 1.Comments start with '#'
+# 2.Comments must be on separate lines and should not be mixed with code on the same line
+# 3.Lines containing code should not have unnecessary or extra spaces
+# 4.Blank lines in the file do not affect script execution; feel free to add them liberally for better readability
+
+# Wait for 1000 milliseconds (1 second = 1000 milliseconds)
+delay(1000)
+
+# Left-click once at the specified coordinates (x: 300, y: 500). 
+# All subsequent examples will use these coordinates for demonstration.
+left_click(300,500)
+
+delay(1000)
+
+# Right-click once at the specified coordinates.
+right_click(300,500)
+
+delay(1000)
+
+# Hold down the left mouse button at the specified coordinates (press and keep pressed). The trailing parameter is 1 in this case.
+# The mouse button press and release functions must be used in pairs, and the order cannot be reversed.
+# To hold the mouse button for a desired duration (3 seconds in this example), simply insert a delay after the press action.
+left_click_long(300,500,1)
+
+delay(3000)
+
+# Release the left mouse button at the specified coordinates (lift up). 
+# The trailing parameter is 0 in this case.
+left_click_long(300,500,0)
+
+delay(1000)
+
+# Hold down the right mouse button at the specified coordinates (press and keep pressed).
+# The trailing parameter is 1 in this case.
+right_click_long(300,500,1)
+
+delay(3000)
+
+# Release the right mouse button at the specified coordinates (lift up). The trailing parameter is 0 in this case.
+right_click_long(300,500,0)
+
+delay(1000)
+
+# Scroll the mouse wheel upward by 400 units. If you need to scroll within a specific window or area, 
+# first use the left_click function to position the mouse cursor at the desired location.
+mouse_wheel(400)
+
+delay(1000)
+
+# Scroll the mouse wheel downward by 400 units.
+mouse_wheel(-400)
+
+delay(1000)
+
+# Start a process (here, attempting to launch the Microsoft Edge browser).
+# When testing loops, always include a delay or once statement. Otherwise, 
+# the script will execute in an infinite loop, rapidly exhausting memory, 
+# causing the Windows system to completely freeze, and requiring a forced shutdown by holding down the power button.
+create_process("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
+
+# The script logic executes only once and then exits. If loop execution is needed, simply omit this statement.
+once()
+
+# by lalaki.cn
+
