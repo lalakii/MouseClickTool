@@ -18,7 +18,7 @@
 - Scheduled triggering and timed launching of external programs
 - Dark mode support
 - Automatically saves settings to a temporary file (no registry modifications)
-- Customizable scripts (Beta): [How do I write scripts?](./Scripts/demo.msck)
+- Customizable scripts (Beta): [How do I write scripts?](https://github.com/lalakii/MouseClickTool/blob/master/README_en.md#write-custom-scripts)
 
 ## Download
 
