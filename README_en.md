@@ -40,7 +40,10 @@ The MouseClickTool script file has the extension "*.msck".
   [Demo script example](./Scripts/demo_en.msck)
 
 ```c
-# Wait N milliseconds, 1 parameter
+# Sets the text displayed in the title bar of the window.
+title("Your title")
+
+# Wait N milliseconds, 1 parameter.
 delay(ms)
 
 # Left-click, two parameters: x and y coordinates.

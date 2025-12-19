@@ -13,6 +13,9 @@ REM Configuration
 set "PROJECT_NAME=App"
 set "TARGET_FRAMEWORK=net462"
 set "DLL_SOURCE=bin\dll\%TARGET_FRAMEWORK%\MouseClickTool.dll"
+set "EASY_GZIP=bin\EasyGzip\%TARGET_FRAMEWORK%\EasyGzip.exe"
+set "x86Gz=.\%PROJECT_NAME%\x86.GZ"
+set "x64Gz=.\%PROJECT_NAME%\x64.GZ"
 
 echo.
 echo ==============================
@@ -22,6 +25,14 @@ echo.
 echo Project: %PROJECT_NAME%
 echo Target Framework: %TARGET_FRAMEWORK%
 echo.
+
+REM 验证 EasyGzip 是否存在
+if not exist "%EASY_GZIP%" (
+    echo [ERROR] EasyGzip not found at: %EASY_GZIP%
+    echo [INFO] Please build the project first
+    echo.
+    exit /b 1
+)
 
 REM 验证 DLL 是否存在
 if not exist "%DLL_SOURCE%" (
@@ -49,26 +60,8 @@ echo [INFO] Attempting to package DLL...
 echo.
 
 REM Use PowerShell for robust GZip compression (no external dependencies)
-powershell -NoProfile -Command ^
-    "$ErrorActionPreference = 'Stop'; ^
-    $dllPath = '%DLL_SOURCE%'; ^
-    $x86Gz = '.\%PROJECT_NAME%\x86.GZ'; ^
-    $x64Gz = '.\%PROJECT_NAME%\x64.GZ'; ^
-    try { ^
-        if (Test-Path $x86Gz) { Remove-Item $x86Gz -Force }; ^
-        if (Test-Path $x64Gz) { Remove-Item $x64Gz -Force }; ^
-        $dllContent = [System.IO.File]::ReadAllBytes($dllPath); ^
-        $gzStream = [System.IO.File]::Create($x86Gz); ^
-        $gzipStream = [System.IO.Compression.GZipStream]::new($gzStream, [System.IO.Compression.CompressionMode]::Compress); ^
-        $gzipStream.Write($dllContent, 0, $dllContent.Length); ^
-        $gzipStream.Dispose(); ^
-        $gzStream.Dispose(); ^
-        [System.IO.File]::Copy($x86Gz, $x64Gz, $true); ^
-        Write-Host '[OK] Packaging complete'; ^
-    } catch { ^
-        Write-Host '[ERROR]' $_.Exception.Message; ^
-        exit 1; ^
-    }"
+%EASY_GZIP% %DLL_SOURCE% %x86Gz%
+copy /Y %x86Gz% %x64Gz%
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

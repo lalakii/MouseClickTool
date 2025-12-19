@@ -1,5 +1,4 @@
 ﻿using System.IO.Compression;
-using System.Reflection;
 
 // main.
 var a = Environment.Is64BitProcess ? "x64" : "x86";

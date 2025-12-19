@@ -7,6 +7,9 @@
 # Wait for 1000 milliseconds (1 second = 1000 milliseconds)
 delay(1000)
 
+# Sets the text displayed in the title bar of the window.
+title("My Demo Script")
+
 # Left-click once at the specified coordinates (x: 300, y: 500). 
 # All subsequent examples will use these coordinates for demonstration.
 left_click(300,500)

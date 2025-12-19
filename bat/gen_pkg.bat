@@ -3,7 +3,8 @@ set procName=7za.exe
 %procName% > NUL 2>&1 &
 if "%ERRORLEVEL%" NEQ "0" (
     echo 7za.exe not found. Please download it from https://7-zip.org/download.html and add it to your PATH environment variable.
-    exit -1
+    call gen_pkg.bat
+    exit 0
 )
 set projectName=App
 if EXIST "bin\dll\net462\MouseClickTool.dll" (

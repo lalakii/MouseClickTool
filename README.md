@@ -43,6 +43,9 @@ MouseClickTool 脚本文件，文件后缀名为"*.msck"
   [查看Demo脚本示例](./Scripts/demo.msck)
 
 ```c
+# 修改窗体标题栏上的文字, 1个参数
+title("Your title")
+
 # 等待n毫秒, 1个参数
 delay(ms)
 

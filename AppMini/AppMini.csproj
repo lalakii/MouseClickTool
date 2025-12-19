@@ -1,15 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <AssemblyName>MouseClickTool_minimal</AssemblyName>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-	<IntermediateOutputPath>..\obj\$(AssemblyName)</IntermediateOutputPath>
-	<OutputPath>..\bin\$(AssemblyName)</OutputPath>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Remove=".gitignore" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+	<PropertyGroup>
+		<AssemblyName>MouseClickTool_minimal</AssemblyName>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<IntermediateOutputPath>..\obj\$(AssemblyName)</IntermediateOutputPath>
+		<OutputPath>..\bin\$(AssemblyName)</OutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\MouseClickTool\MouseClickTool.csproj">
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+		</ProjectReference>
+		<None Remove=".gitignore" />
+		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 </Project>

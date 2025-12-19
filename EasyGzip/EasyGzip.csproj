@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>EasyGzip</AssemblyName>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <IntermediateOutputPath>..\obj\$(AssemblyName)</IntermediateOutputPath>
+	<OutputType>Exe</OutputType>
+    <OutputPath>..\bin\$(AssemblyName)</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove=".gitignore" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>
