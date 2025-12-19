@@ -8,28 +8,70 @@
 
 [ [简体中文](./README.md) | [English](./README_en.md) ]
 
-> Simple and easy to use mouse clicker.
+> A simple and easy-to-use mouse auto-clicker.
 
 ## Features
 
-- Support to switch between left/right mouse click/long press click/scroll wheel
-- Support customized click interval in milliseconds
-- Support customized hotkeys
-- Supports specified time triggering / Timed start of external programs
-- Adapted to dark color mode
-- Automatically memorize the configuration parameters, the configuration file is stored in the system temporary directory, without polluting the registry
+- Left/right mouse clicks, long-press, and mouse wheel scrolling
+- Customizable click interval (in milliseconds)
+- Customizable hotkeys
+- Scheduled triggering and timed launching of external programs
+- Dark mode support
+- Automatically saves settings to a temporary file (no registry modifications)
+- Customizable scripts (Beta): [How do I write scripts?](./Scripts/demo.msck)
 
 ## Download
 
 [Github Releases](https://github.com/lalakii/MouseClickTool/releases)
 
-<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool_en.png?v=2.0" alt="MouseClickTool MainForm"/>
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool_en.png?v=2.0" alt="Screenshot of MouseClickTool"/>
+
+## Write custom scripts
+
+The MouseClickTool script file has the extension "*.msck".
+
+**Precautions**
+
+  + Comments begin with '#'
+  + Comments should be on a separate line and not mixed with the code
+  + There should be no extra spaces on the line containing the code
+  + Blank lines within the file will not affect script execution; additional blank lines can be added for easier readability.
+
+  [Demo script example](./Scripts/demo.msck)
+
+```c
+# Wait N milliseconds, 1 parameter
+delay(ms)
+
+# Left-click, two parameters: x and y coordinates.
+left_click(x,y)
+
+# Right-click, two parameters: x and y coordinates.
+right_click(x,y)
+
+# Left-LongClick, three parameters, x and y coordinates, type: 1 indicates pressing, 2 indicates releasing.
+# When long-pressing, pay attention to the order; you must press down first and then release. Using delay can adjust the duration of the long press.
+# Without adding a delay, it is just a regular click.
+left_click_long(x,y,type)
+
+# Right-LongClick, three parameters, x and y coordinates, type: 1 indicates pressing, 2 indicates releasing.
+right_click_long(x,y,type)
+
+# Mouse wheel scrolling, 1 parameter, the value can be positive or negative, indicating whether the scrolling direction is up or down.
+mouse_wheel(value)
+
+# Launch an external program, only one parameter is required: fileName, which represents the full path to the program and can include application startup parameters.
+create_process("fileName")
+
+# Executes only once and exits; no parameters are required. Do not add parameters if you need to execute it repeatedly.
+once()
+```
 
 ## FAQs
 
-If any of the software is not clickable, try running this software as an administrator or with TrustedInstaller privileges.
+If the tool cannot click in certain applications or games, try running it as Administrator or with TrustedInstaller privileges.
 
-Here's an extractor tool: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/).
+Here's a privilege escalation tool: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/).
 
 Be careful when setting up hotkeys that they don't conflict with other programs.
 

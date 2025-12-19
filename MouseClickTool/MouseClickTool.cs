@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 
 [assembly: System.Reflection.AssemblyVersion("2.9.2.0")]
@@ -8,13 +9,11 @@ using System.Windows.Forms;
 [System.ComponentModel.DesignerCategory("")]
 public class MouseClickTool : Form
 {
-    private readonly Random useRandom = new();
+    private readonly RNGCryptoServiceProvider p = new();
     private readonly string[] cfg;
     private Input m;
     private int wait = 3;
     private TaskCompletionSource<int>? z;
-    private bool useRandomInterval;
-    private bool saveLog;
 
     public MouseClickTool()
     {
@@ -41,19 +40,7 @@ public class MouseClickTool : Form
         ComboBox a2 = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, d1 = new() { DropDownStyle = a2.DropDownStyle, FlatStyle = a2.FlatStyle };
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox a1 = new(), c1 = new();
-
         CheckBox randomCheckBox = new() { Text = cn ? "随机扰动" : "Random Perturbation", AutoSize = true, Checked = false }, logCbx = new() { Text = cn ? "记录日志" : "Record Logs", AutoSize = true, Checked = false };
-        randomCheckBox.CheckedChanged += (_, _) =>
-        {
-            useRandomInterval = randomCheckBox.Checked;
-            cfg[10] = $"{useRandomInterval}";
-        };
-        logCbx.CheckedChanged += (_, _) =>
-        {
-            saveLog = logCbx.Checked;
-            cfg[13] = $"{saveLog}";
-        };
-
         var runMode = 0; // 0 default, 1 createProcess, 2 runAsScript
         c1.TextChanged += (_, _) => cfg[a2.SelectedIndex switch
         {
@@ -219,10 +206,20 @@ public class MouseClickTool : Form
         d1.SelectedItem = cfg[0];
         a1.Text = cfg[1];
         a2.SelectedIndex = ctv;
-        _ = bool.TryParse(cfg[10], out useRandomInterval);
-        _ = bool.TryParse(cfg[13], out saveLog);
+        _ = bool.TryParse(cfg[10], out bool useRandomInterval);
+        _ = bool.TryParse(cfg[13], out bool saveLog);
         logCbx.Checked = saveLog;
         randomCheckBox.Checked = useRandomInterval;
+        randomCheckBox.CheckedChanged += (_, _) =>
+        {
+            useRandomInterval = randomCheckBox.Checked;
+            cfg[10] = $"{useRandomInterval}";
+        };
+        logCbx.CheckedChanged += (_, _) =>
+        {
+            saveLog = logCbx.Checked;
+            cfg[13] = $"{saveLog}";
+        };
         FormClosing += (_, _) =>
         {
             try
@@ -233,6 +230,7 @@ public class MouseClickTool : Form
             {
             }
         };
+        byte[] randomBytes = new byte[4];
         d2.Click += (_, _) =>
         {
             d2.Enabled = false;
@@ -334,7 +332,7 @@ public class MouseClickTool : Form
 
                                         if (scriptLine.Length > 1)
                                         {
-                                            var eventType = scriptLine[0];
+                                            var eventType = scriptLine[0].Trim().ToLower();
                                             var scriptCommand = scriptLine[1];
                                             var args = scriptCommand.Split(',');
                                             var clickSimple = false;
@@ -461,7 +459,10 @@ public class MouseClickTool : Form
                                 if (useRandomInterval)
                                 {
                                     // 随机系数：0.8 ~ 1.2
-                                    double randomFactor = (useRandom.NextDouble() * 0.4) + 0.8;
+                                    p.GetBytes(randomBytes);
+                                    int randomInt = BitConverter.ToInt32(randomBytes, 0);
+                                    double randomDouble = (randomInt & 0x7FFFFFFF) / (double)0x7FFFFFFF;
+                                    double randomFactor = 0.8 + (randomDouble * (1.2 - 0.8));
                                     actualDelay = (int)Math.Round(delay * randomFactor);
                                 }
 

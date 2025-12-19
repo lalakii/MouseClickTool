@@ -18,9 +18,10 @@
 - 支持自定义点击间隔，单位是毫秒
 - 支持自定义热键
 - 支持指定时间触发 / 定时启动外部程序
+- 自动记忆配置参数，配置文件存储在“我的文档”目录，不污染注册表
 - 已适配深色模式
-- 自动记忆配置参数，配置文件存储在系统临时目录，不污染注册表
-- 支持自定义脚本(Beta) [如何编写脚本?](https://github.com/lalakii/MouseClickTool?tab=readme-ov-file#%E7%BC%96%E5%86%99%E8%87%AA%E5%AE%9A%E4%B9%89%E8%84%9A%E6%9C%AC)
+- 已添加随机扰动，避免被检测
+- 自定义脚本(Beta) [如何编写脚本?](https://github.com/lalakii/MouseClickTool?tab=readme-ov-file#%E7%BC%96%E5%86%99%E8%87%AA%E5%AE%9A%E4%B9%89%E8%84%9A%E6%9C%AC)
 
 ## 下载
 
@@ -28,24 +29,11 @@
 
 <img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="MouseClickTool MainForm"/>
 
-## 常见问题
-
-如何退出？如果鼠标点击频率过快无法停下来，请先让程序窗口到前台（ALT+TAB），然后按 ALT+F4 关闭程序。
-
-如果有软件无法被点击，尝试以管理员身份或者TrustedInstaller特权运行此软件。
-
-这里附上一个提权工具: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/)
-
-设置热键时留意是否会和其他程序冲突。
-
-如果需要测试连点器速度，我知道这些网站：
-
-- [点击速度测试 10 秒](https://cps-check.com/cn/)
-- [CPS 测试 - 鼠标点击速度测试](https://www.arealme.com/click-speed-test/cn/)
-
 ## 编写自定义脚本
 
 MouseClickTool 脚本文件，文件后缀名为"*.msck"
+
+**注意事项**
 
   + 注释使用'#'开头
   + 注释应当另起一行，不要和代码混在一起
@@ -66,6 +54,7 @@ right_click(x,y)
 
 # 左键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开) 
 # 长按时需要注意顺序，必须先按下再松开，搭配delay可以实现长按的时间
+# 如果不添加delay，相当于一次普通单击
 left_click_long(x,y,type)
 
 # 右键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开)
@@ -79,7 +68,21 @@ create_process("fileName")
 
 # 仅执行一次退出, 无参数, 需要循环执行时不添加
 once()
-
 ```
+
+## 常见问题
+
+如何退出？如果鼠标点击频率过快无法停下来，请先让程序窗口到前台（ALT+TAB），然后按 ALT+F4 关闭程序。
+
+如果有软件无法被点击，尝试以管理员身份或者TrustedInstaller特权运行此软件。
+
+这里附上一个提权工具: [M2TeamArchived/NSudo](https://github.com/M2TeamArchived/NSudo/releases/)
+
+设置热键时留意是否会和其他程序冲突。
+
+如果需要测试连点器速度，我知道这些网站：
+
+- [点击速度测试 10 秒](https://cps-check.com/cn/)
+- [CPS 测试 - 鼠标点击速度测试](https://www.arealme.com/click-speed-test/cn/)
 
 ## By lalaki.cn
