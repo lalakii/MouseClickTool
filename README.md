@@ -25,9 +25,9 @@
 
 ## 下载
 
-[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-Upxxd) | [蓝奏云](https://a01.lanzout.com/b0hdkyc4b) **密码：86ke**
+[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-gfxxd) | [蓝奏云](https://a01.lanzout.com/b0hdl1xde) **密码：7tgq**
 
-<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="MouseClickTool MainForm"/>
+<img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="Screenshot of MouseClickTool"/>
 
 ## 编写自定义脚本
 
@@ -56,8 +56,8 @@ left_click(x,y)
 right_click(x,y)
 
 # 左键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开) 
-# 长按时需要注意顺序，必须先按下再松开，搭配delay可以实现长按的时间
-# 如果不添加delay，相当于一次普通单击
+# 长按时需要注意顺序, 必须先按下再松开, 搭配delay可以实现长按的时间
+# 如果不添加delay, 相当于一次普通单击
 left_click_long(x,y,type)
 
 # 右键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开)
@@ -69,8 +69,11 @@ mouse_wheel(value)
 # 启动程序, 1个参数, fileName表示程序完整路径, 可携带参数
 create_process("fileName")
 
-# 仅执行一次退出, 无参数, 需要循环执行时不添加
+# 结束当前脚本, 无参数, 脚本默认循环执行, 需要循环执行时不要添加
 once()
+
+# 结束进程, 无参数, 直接退出连点器
+exit()
 ```
 
 ## 常见问题

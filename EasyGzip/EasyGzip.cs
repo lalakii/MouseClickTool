@@ -1,7 +1,6 @@
 ﻿using System.IO.Compression;
-using System.Reflection;
 
-// main.
+// built-in Gzip
 var a = Environment.GetCommandLineArgs();
 if (a != null && a.Length > 1)
 {
@@ -21,5 +20,5 @@ if (a != null && a.Length > 1)
 }
 else
 {
-    Console.WriteLine("EasyGzip.exe inputFullName compressFileName");
+    Console.WriteLine("Command: EasyGzip.exe inputFullName compressFileName");
 }

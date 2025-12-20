@@ -62,7 +62,7 @@ delay(1000)
 # causing the Windows system to completely freeze, and requiring a forced shutdown by holding down the power button.
 create_process("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
 
-# The script logic executes only once and then exits. If loop execution is needed, simply omit this statement.
+# Stop the running script; no parameters are required. Do not use this function if looping is required.
 once()
 
 # by lalaki.cn

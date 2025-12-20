@@ -66,8 +66,11 @@ mouse_wheel(value)
 # Launch an external program, only one parameter is required: fileName, which represents the full path to the program and can include application startup parameters.
 create_process("fileName")
 
-# Executes only once and exits; no parameters are required. Do not add parameters if you need to execute it repeatedly.
+# Stop the running script; no parameters are required. Do not use this function if looping is required.
 once()
+
+# Terminate the current process to stop the mouse clicker; no parameters are required.
+exit()
 ```
 
 ## FAQs

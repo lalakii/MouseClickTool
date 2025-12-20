@@ -56,7 +56,7 @@ delay(1000)
 # 测试时应添加delay或once，否则循环执行把内存消耗完，windows系统卡死，必须按电源键强制关机
 create_process("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
 
-# 表示脚本逻辑仅执行一次就退出，如果需要循环执行，移除即可
+# 结束当前脚本, 无参数, 脚本默认循环执行, 需要循环执行时不要添加
 once()
 
 # by lalaki.cn
