@@ -149,7 +149,7 @@ public class MouseClickTool : Form
         };
         Load += (_, _) =>
         {
-            d1.Width = a1.Width = (int)DefaultFont.Size * 10;
+            d1.Width = a1.Width = (int)DefaultFont.Size * 9;
             a0.Left = 8 + Math.Abs(a0.Width - b0.Width);
             b0.Left = a0.Right - b0.Width;
             a0.Top = t2.Height;
@@ -157,9 +157,9 @@ public class MouseClickTool : Form
             a2.Left = a1.Right + ft;
             a2.Top = a0.Top - HeightDiff(a2.Height, a1.Height);
             a1.Top = a0.Top - HeightDiff(a1.Height, a2.Height);
-            b0.Top = a0.Bottom + 8;
-            c0.Top = b0.Bottom + 8;
-            d0.Top = c0.Bottom + 8;
+            b0.Top = a0.Bottom + ft;
+            c0.Top = b0.Bottom + ft;
+            d0.Top = c0.Bottom + ft;
             d0.Left = a0.Right - d0.Width;
             b1.Left = a1.Left;
             c0.Left = a0.Right - c0.Width;
@@ -169,18 +169,18 @@ public class MouseClickTool : Form
             d1.Top = d0.Top - HeightDiff(d1.Height, b0.Height);
             b1.Top = b0.Top - HeightDiff(b1.Height, b0.Height);
             d2.Left = a2.Left;
-            d2.Width = a2.DropDownWidth * 4 / (cn ? 8 : 5);
+            d2.Width = a2.DropDownWidth * 4 / (cn ? 7 : 5);
             d2.Top = d1.Top - HeightDiff(d2.Height, d1.Height);
             a2.Width = d2.Width;
             Width = d2.Right + 12;
-            b1.Width = d2.Width + d1.Width + ft;
+            b1.Width = d2.Right - d1.Left;
             c1.Width = b1.Width;
             t2.Left = Width - t2.Width - 4;
             t1.Left = t2.Left - t2.Width;
             t1.Top = HeightDiff(t2.Height, t1.Height);
             t0.Left = t1.Left - t2.Width - 3;
             cb0.Left = d0.Left;
-            cb0.Top = d2.Bottom + 8;
+            cb0.Top = d2.Bottom + ft;
             e0.Top = cb0.Top - HeightDiff(cb0.Height, e0.Height);
             cb1.Left = cb0.Right + ft;
             cb1.Top = cb0.Top;
@@ -400,14 +400,14 @@ public class MouseClickTool : Form
                                                     CreateProcess("cmd.exe", $"/c {scriptCommand}");
                                                     continue;
                                                 case "title":
-                                                    cfg[14] = scriptCommand.Trim('\"');
-                                                    Text = cfg[14];
+                                                    Text = scriptCommand.Trim('\"');
+                                                    cfg[14] = Text;
                                                     Invoke((MethodInvoker)Invalidate);
-                                                    break;
+                                                    continue;
                                                 case "exit":
                                                 case "quit":
                                                     InvokeOnClick(t2, null);
-                                                    break;
+                                                    continue;
                                                 case "once":
                                                 case "break":
                                                     z?.TrySetCanceled();
