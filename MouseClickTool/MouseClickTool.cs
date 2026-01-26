@@ -108,7 +108,7 @@ public class MouseClickTool : Form
                     c1.Text = cfg[12];
                     runMode = 2;
                     break;
-               default :
+                default:
                     c0.Text = cfg[7];
                     c1.Text = cfg[4];
                     runMode = 0;
