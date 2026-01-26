@@ -78,7 +78,7 @@ public class MouseClickTool : Form
             d1.Items.Add($"F{i}");
         }
 
-        d1.Items.AddRange(["Home"， "End"]);
+        d1.Items.AddRange(["Home", "End"]);
         const int hotkeyId = 0x233;
         d1.SelectedIndexChanged += (_, _) =>
         {
@@ -203,6 +203,7 @@ public class MouseClickTool : Form
                 foreach (int i in persistIndices) cfg[i] = tCfg[i];
             }
         }
+        
         Text = $"{cfg[14]} {(Environment.Is64BitProcess ? " x64" : " x86")}";
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
         d1.SelectedItem = cfg[0];
@@ -614,3 +615,4 @@ public class MouseClickTool : Form
         public IntPtr dwExtraInfo;
     }
 }
+
