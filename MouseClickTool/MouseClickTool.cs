@@ -27,8 +27,9 @@ public class MouseClickTool : Form
         {
         }
 
-        var cl = InputLanguage.CurrentInputLanguage.Culture;
-        var cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
+        var isChinese = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
+        var cl = System.Globalization.CultureInfo.CurrentUICulture;
+        var cn = isChinese;
         cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty, string.Empty, cn ? "脚本文件(File):" : "Select Script:", string.Empty, string.Empty, "MouseClickTool"];
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -186,7 +187,7 @@ public class MouseClickTool : Form
             cb1.Top = cb0.Top;
             Height = cb0.Bottom + ft;
         };
-        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
+        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool.ini");
         if (File.Exists(ini))
         {
             var tCfg = File.ReadAllLines(ini);
