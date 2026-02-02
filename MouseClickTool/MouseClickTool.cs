@@ -14,8 +14,6 @@ public class MouseClickTool : Form
 
     public MouseClickTool()
     {
-        Thread.CurrentThread.SetApartmentState(ApartmentState.Unknown);
-        Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
         Application.EnableVisualStyles();
         var dark = false;
         try
@@ -27,14 +25,13 @@ public class MouseClickTool : Form
         {
         }
 
-        var isChinese = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh"， StringComparison.OrdinalIgnoreCase);
+        var cn = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
         var cl = System.Globalization.CultureInfo.CurrentUICulture;
-        var cn = isChinese;
-        cfg = ["F1", "1000", "0", "600"， string.Empty, 
-               cn ? "开始" : "Start ", cn ? "停止" : "Stop ", 
-               cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", 
-               string.Empty, "False", 
-               cn ? "脚本文件(File):" : "Select Script:", 
+        cfg = ["F1", "1000", "0", "600", string.Empty,
+               cn ? "开始" : "Start ", cn ? "停止" : "Stop ",
+               cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:",
+               string.Empty, "False",
+               cn ? "脚本文件(File):" : "Select Script:",
                string.Empty, "False", "MouseClickTool"];
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
@@ -192,18 +189,20 @@ public class MouseClickTool : Form
             cb1.Top = cb0.Top;
             Height = cb0.Bottom + ft;
         };
-        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool.ini");
+        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool_V2.ini");
         if (File.Exists(ini))
         {
             var tCfg = File.ReadAllLines(ini);
             if (tCfg.Length == cfg.Length)
             {
                 // 仅恢复数值设置项，防止配置文件里的旧语言字符串覆盖当前的 UI 语言
-                int[] persistIndices = { 0, 1, 2, 3, 4, 9, 10, 12, 13, 14 };
-                foreach (int i in persistIndices) cfg[i] = tCfg[i];
+                foreach (int i in new int[] { 0, 1, 2, 3, 4, 9, 10, 12, 13, 14 })
+                {
+                    cfg[i] = tCfg[i];
+                }
             }
         }
-        
+
         Text = $"{cfg[14]} {(Environment.Is64BitProcess ? " x64" : " x86")}";
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
         d1.SelectedItem = cfg[0];
@@ -344,13 +343,18 @@ public class MouseClickTool : Form
                                             pressed = false;
                                             if (args.Length > 1)
                                             {
-                                                _ = int.TryParse(args[0], out int posX);
-                                                _ = int.TryParse(args[1], out int posY);
-                                                var screen = Screen.PrimaryScreen.Bounds;
-                                                m.mi.dx = posX * 65535 / screen.Width;
-                                                m.mi.dy = posY * 65535 / screen.Height;
-                                                m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_MOVE | MouseEventFlag.MOUSEEVENTF_ABSOLUTE;
-                                                SendInput(size);
+                                                var arg0 = args[0].Trim();
+                                                var arg1 = args[1].Trim();
+                                                if (!arg0.Equals("null", StringComparison.OrdinalIgnoreCase) && !arg1.Equals("null", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    _ = int.TryParse(arg0, out int posX);
+                                                    _ = int.TryParse(arg1, out int posY);
+                                                    var screen = Screen.PrimaryScreen.Bounds;
+                                                    m.mi.dx = posX * 65535 / screen.Width;
+                                                    m.mi.dy = posY * 65535 / screen.Height;
+                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_MOVE | MouseEventFlag.MOUSEEVENTF_ABSOLUTE;
+                                                    SendInput(size);
+                                                }
                                             }
 
                                             if (r9)
@@ -390,7 +394,6 @@ public class MouseClickTool : Form
                                                     }
 
                                                     m.mi.dwFlags = upFlag;
-                                                    SendInput(size);
                                                     break;
                                                 case "right_click_long":
                                                     upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
@@ -400,7 +403,6 @@ public class MouseClickTool : Form
                                                     }
 
                                                     m.mi.dwFlags = upFlag;
-                                                    SendInput(size);
                                                     break;
                                                 case "mouse_wheel":
                                                     m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_WHEEL;
@@ -615,4 +617,3 @@ public class MouseClickTool : Form
         public IntPtr dwExtraInfo;
     }
 }
-

@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <Copyright>Copyright (C) 2026 lalaki.cn</Copyright>
-    <Version>3.0.0.0</Version>
+    <Version>3.1.0.0</Version>
     <AnalysisLevel>latest</AnalysisLevel>
     <DebugType>none</DebugType>
     <GenerateSupportedRuntime>False</GenerateSupportedRuntime>

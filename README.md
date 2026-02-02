@@ -25,7 +25,7 @@
 
 ## 下载
 
-[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-Jaxxd) | [蓝奏云](https://a01.lanzout.com/b0hdl8urc) **密码：4fpx**
+[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-eDxxd) | [蓝奏云](https://a01.lanzout.com/b0hdp19ub) **密码：2dfc**
 
 <img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="Screenshot of MouseClickTool"/>
 
@@ -49,18 +49,18 @@ title("Your title")
 # 等待n毫秒, 1个参数
 delay(ms)
 
-# 鼠标左键单击, 2个参数，x,y坐标
+# 鼠标左键单击, 2个参数，x,y坐标(坐标允许传递null,即当前坐标)
 left_click(x,y)
 
-# 鼠标右键单击, 2个参数, x,y坐标
+# 鼠标右键单击, 2个参数, x,y坐标(坐标允许传递null,即当前坐标)
 right_click(x,y)
 
-# 左键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开) 
+# 左键长按, 3个参数, x,y坐标(坐标允许传递null,即当前坐标), type可选1(按下)或0(松开) 
 # 长按时需要注意顺序, 必须先按下再松开, 搭配delay可以实现长按的时间
 # 如果不添加delay, 相当于一次普通单击
 left_click_long(x,y,type)
 
-# 右键长按, 3个参数, x,y坐标, type可选1(按下)或0(松开)
+# 右键长按, 3个参数, x,y坐标(坐标允许传递null,即当前坐标), type可选1(按下)或0(松开)
 right_click_long(x,y,type)
 
 # 鼠标滚轮滚动, 1个参数, value可以为是正数或负数, 分别是向上或向下滚动

@@ -13,6 +13,8 @@ try
         }
     }
 
+    Thread.CurrentThread.SetApartmentState(ApartmentState.Unknown);
+    Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
     Activator.CreateInstanceFrom(p, "MouseClickTool");
 }
 catch

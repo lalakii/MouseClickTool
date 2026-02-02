@@ -47,7 +47,7 @@ title("Your title")
 # Wait N milliseconds, 1 parameter.
 delay(ms)
 
-# Left-click, two parameters: x and y coordinates.
+# Left-click, two parameters: x and y coordinates, If `x` or `y` is `null`, the current coordinate/value/position is used.
 left_click(x,y)
 
 # Right-click, two parameters: x and y coordinates.
