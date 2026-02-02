@@ -27,9 +27,15 @@ public class MouseClickTool : Form
         {
         }
 
-        var cl = InputLanguage.CurrentInputLanguage.Culture;
-        var cn = cl.Name.IndexOf("zh-", StringComparison.OrdinalIgnoreCase) > -1;
-        cfg = ["F1", "1000", "0", "600", string.Empty, cn ? "开始" : "Start ", cn ? "停止" : "Stop ", cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", string.Empty, string.Empty, cn ? "脚本文件(File):" : "Select Script:", string.Empty, string.Empty, "MouseClickTool"];
+        var isChinese = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh"， StringComparison.OrdinalIgnoreCase);
+        var cl = System.Globalization.CultureInfo.CurrentUICulture;
+        var cn = isChinese;
+        cfg = ["F1", "1000", "0", "600"， string.Empty, 
+               cn ? "开始" : "Start ", cn ? "停止" : "Stop ", 
+               cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:", 
+               string.Empty, "False", 
+               cn ? "脚本文件(File):" : "Select Script:", 
+               string.Empty, "False", "MouseClickTool"];
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
         Label a0 = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f), BackColor = t2.BackColor }, t0 = new() { AutoSize = true, Text = "?", BackColor = t2.BackColor, Font = t2.Font }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, c0 = new() { Text = cfg[6], AutoSize = true, TextAlign = a0.TextAlign }, e0 = new() { AutoSize = true, TextAlign = ContentAlignment.BottomRight };
@@ -186,13 +192,18 @@ public class MouseClickTool : Form
             cb1.Top = cb0.Top;
             Height = cb0.Bottom + ft;
         };
-        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"MouseClickTool_{(cn ? "zh" : "en")}.ini");
+        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool.ini");
         if (File.Exists(ini))
         {
             var tCfg = File.ReadAllLines(ini);
-            cfg = (tCfg.Length == cfg.Length) ? tCfg : cfg;
+            if (tCfg.Length == cfg.Length)
+            {
+                // 仅恢复数值设置项，防止配置文件里的旧语言字符串覆盖当前的 UI 语言
+                int[] persistIndices = { 0, 1, 2, 3, 4, 9, 10, 12, 13, 14 };
+                foreach (int i in persistIndices) cfg[i] = tCfg[i];
+            }
         }
-
+        
         Text = $"{cfg[14]} {(Environment.Is64BitProcess ? " x64" : " x86")}";
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
         d1.SelectedItem = cfg[0];
@@ -604,3 +615,4 @@ public class MouseClickTool : Form
         public IntPtr dwExtraInfo;
     }
 }
+
