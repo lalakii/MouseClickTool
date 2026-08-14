@@ -11,6 +11,9 @@ public class MouseClickTool : Form
     private Input m;
     private int wait = 3;
     private TaskCompletionSource<int>? z;
+    private IntPtr hh;
+    private LLMP? hp;
+    private int ht;
 
     public MouseClickTool()
     {
@@ -75,18 +78,29 @@ public class MouseClickTool : Form
             d1.Items.Add($"F{i}");
         }
 
-        d1.Items.AddRange(["Home", "End"]);
+        var middle = cn ? "鼠标中键(Middle)" : "Mouse Middle";
+        d1.Items.AddRange(["Home", "End", middle]);
         const int hotkeyId = 0x233;
         d1.SelectedIndexChanged += (_, _) =>
         {
             UnregisterHotKey(Handle, hotkeyId);
-            if (Enum.TryParse(d1.Text, out Keys key))
+            UnhookMouse();
+            if (d1.Text == middle)
+            {
+                HookMouse();
+            }
+            else if (Enum.TryParse(d1.Text, out Keys key))
             {
                 RegisterHotKey(Handle, hotkeyId, 0x4000, key);
-                cfg[0] = d1.Text;
-                UpdateText();
-                d2.Focus();
             }
+            else
+            {
+                return;
+            }
+
+            cfg[0] = d1.Text == middle ? "Middle" : d1.Text;
+            UpdateText();
+            d2.Focus();
         };
         const int ft = 6;
         a1.TextChanged += (_, _) => cfg[1] = a1.Text;
@@ -205,7 +219,7 @@ public class MouseClickTool : Form
 
         Text = $"{cfg[14]} {(Environment.Is64BitProcess ? " x64" : " x86")}";
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
-        d1.SelectedItem = cfg[0];
+        d1.SelectedItem = cfg[0] == "Middle" ? middle : cfg[0];
         a1.Text = cfg[1];
         a2.SelectedIndex = ctv;
         _ = bool.TryParse(cfg[10], out bool r1);
@@ -224,6 +238,7 @@ public class MouseClickTool : Form
         };
         FormClosing += (_, _) =>
         {
+            UnhookMouse();
             try
             {
                 File.WriteAllLines(ini, cfg);
@@ -513,8 +528,11 @@ public class MouseClickTool : Form
                 z?.TrySetCanceled();
             }
         };
+        hp = MouseHookCb;
         Application.Run(this);
     }
+
+    private delegate IntPtr LLMP(int nCode, IntPtr wParam, IntPtr lParam);
 
     [Flags]
     private enum MouseEventFlag
@@ -547,8 +565,7 @@ public class MouseClickTool : Form
         }
         else if (m.Msg == 0x0312)
         {
-            wait = 0;
-            ((Button)Controls[0]).PerformClick();
+            Trigger();
         }
     }
 
@@ -588,6 +605,18 @@ public class MouseClickTool : Form
     [DllImport("user32.dll")]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LLMP lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetModuleHandle(string? lpModuleName);
+
     private void SendInput(int cbSize)
     {
         _ = SendInput(1, ref m, cbSize);
@@ -597,6 +626,43 @@ public class MouseClickTool : Form
     {
         Controls[0].Text = $"{(z == null ? cfg[5] : cfg[6])}({cfg[0]})";
         Controls[0].Enabled = true;
+    }
+
+    private void Trigger()
+    {
+        wait = 0;
+        ((Button)Controls[0]).PerformClick();
+    }
+
+    private void HookMouse()
+    {
+        if (hh == IntPtr.Zero)
+        {
+            var cb = hp ??= MouseHookCb;
+            hh = SetWindowsHookEx(14, cb, GetModuleHandle(null), 0);
+        }
+    }
+
+    private void UnhookMouse()
+    {
+        if (hh != IntPtr.Zero)
+        {
+            UnhookWindowsHookEx(hh);
+            hh = IntPtr.Zero;
+        }
+    }
+
+    private IntPtr MouseHookCb(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        // 松开中键才触发（按下不触发，便于按住预备/瞄准；按住期间目标可能处于中键特殊状态，
+        // 如浏览器自动滚动，此时合成的连击会被吞掉）。500ms 去抖：滚轮回弹易产生二次 WM_MBUTTONUP，会误触发"停止"
+        if (nCode >= 0 && wParam == (IntPtr)0x0208 && Environment.TickCount - ht > 500)
+        {
+            ht = Environment.TickCount;
+            Trigger();
+        }
+
+        return CallNextHookEx(hh, nCode, wParam, lParam);
     }
 
     [StructLayout(LayoutKind.Sequential)]
