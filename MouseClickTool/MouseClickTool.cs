@@ -29,8 +29,8 @@ public class MouseClickTool : Form
         {
         }
 
-        var cn = System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
-        var cl = System.Globalization.CultureInfo.CurrentUICulture;
+        var cn = CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
+        var cl = CultureInfo.CurrentUICulture;
         cfg = ["F1", "1000", "0", "600", string.Empty,
                cn ? "开始" : "Start ", cn ? "停止" : "Stop ",
                cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:",

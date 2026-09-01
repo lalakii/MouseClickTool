@@ -6,6 +6,7 @@ if "%ERRORLEVEL%" NEQ "0" (
     call gen_pkg.bat
     exit 0
 )
+echo Compress with 7-Zip
 set projectName=App
 if EXIST "bin\dll\net462\MouseClickTool.dll" (
     del .\%projectName%\x86.GZ /Q > NUL 2>&1

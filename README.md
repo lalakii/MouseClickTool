@@ -25,7 +25,7 @@
 
 ## 下载
 
-[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://www.123865.com/s/jE3Sjv-eDxxd) | [蓝奏云](https://a01.lanzout.com/b0hdp19ub) **密码：2dfc**
+[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://1828226239.share.123pan.cn/123pan/jE3Sjv-LEGMd) | [蓝奏云](https://a01.lanzout.com/b0he68jbg) **密码: 60im**
 
 <img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="Screenshot of MouseClickTool"/>
 
