@@ -11,6 +11,10 @@ public class MouseClickTool : Form
     private Input m;
     private int wait = 3;
     private TaskCompletionSource<int>? z;
+    private IntPtr hh;
+    private LLMP? hp;
+    private int ht;
+    private bool hk;
 
     public MouseClickTool()
     {
@@ -35,6 +39,7 @@ public class MouseClickTool : Form
                string.Empty, "False", "MouseClickTool"];
         BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
+        KeyPreview = true; // 焦点在下拉框/按钮上时窗体也要先收到按键，否则组合键捕获与 Esc 取消都不会触发
         Label a0 = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f), BackColor = t2.BackColor }, t0 = new() { AutoSize = true, Text = "?", BackColor = t2.BackColor, Font = t2.Font }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, c0 = new() { Text = cfg[6], AutoSize = true, TextAlign = a0.TextAlign }, e0 = new() { AutoSize = true, TextAlign = ContentAlignment.BottomRight };
         ComboBox a2 = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, d1 = new() { DropDownStyle = a2.DropDownStyle, FlatStyle = a2.FlatStyle };
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
@@ -47,8 +52,9 @@ public class MouseClickTool : Form
             7 => 12,
             _ => 4,
         }] = c1.Text;
-        Button d2 = new() { AutoSize = true, Tag = cfg };
-        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, cb0, e0, cb1])
+        Label h0 = new() { AutoSize = true, Visible = false }; // 快捷键操作提示(录制中/可删除)
+        Button d2 = new() { Tag = cfg };
+        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, cb0, e0, cb1, h0])
         {
             if (dark)
             {
@@ -75,18 +81,49 @@ public class MouseClickTool : Form
             d1.Items.Add($"F{i}");
         }
 
-        d1.Items.AddRange(["Home", "End"]);
+        var middle = cn ? "鼠标中键(Middle)" : "Mouse Middle";
+        var custom = cn ? "自定义(Custom)" : "Custom";
+        d1.Items.AddRange(["Home", "End", middle, custom]);
+
+        // 预留最长组合键文本，避免下拉列表与收起状态截断
+        d1.DropDownWidth = Math.Max(TextRenderer.MeasureText(middle, d1.Font).Width, Math.Max(TextRenderer.MeasureText(custom, d1.Font).Width, TextRenderer.MeasureText("Ctrl+Alt+Shift+F12", d1.Font).Width)) + 16;
         const int hotkeyId = 0x233;
         d1.SelectedIndexChanged += (_, _) =>
         {
             UnregisterHotKey(Handle, hotkeyId);
-            if (Enum.TryParse(d1.Text, out Keys key))
+            UnhookMouse();
+            hk = false;
+            if (d1.Text == custom)
             {
-                RegisterHotKey(Handle, hotkeyId, 0x4000, key);
-                cfg[0] = d1.Text;
-                UpdateText();
-                d2.Focus();
+                hk = true;
+                Controls[0].Text = cn ? "请按组合键(Esc取消)" : "Press keys (Esc cancels)";
+                Controls[0].Enabled = false;
+                h0.Text = cn ? "录制中:按 Ctrl/Alt/Shift+主键,Esc 取消" : "Recording: Ctrl/Alt/Shift + a key; Esc cancels";
+                h0.Visible = true;
+                return;
             }
+
+            if (d1.Text == middle)
+            {
+                HookMouse();
+            }
+            else if (TryParseHotkey(d1.Text, out int mods, out var key))
+            {
+                if (!RegisterHotKey(Handle, hotkeyId, mods, key))
+                {
+                    MessageBox.Show(cn ? $"快捷键 {d1.Text} 注册失败，可能已被其他程序占用" : $"Failed to register {d1.Text}; it may be in use", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            cfg[0] = d1.Text == middle ? "Middle" : d1.Text;
+            UpdateText();
+            h0.Text = cn ? "按 Del 键删除此自定义快捷键" : "Press Del to remove this hotkey";
+            h0.Visible = d1.Text.Contains('+');
+            d2.Focus();
         };
         const int ft = 6;
         a1.TextChanged += (_, _) => cfg[1] = a1.Text;
@@ -139,6 +176,49 @@ public class MouseClickTool : Form
         t0.MouseEnter += (_, _) => t0.ForeColor = Color.DodgerBlue;
         t0.MouseLeave += (_, _) => t0.ForeColor = d2.ForeColor;
         t0.Click += (_, _) => CreateProcess("https://mouseclicktool.sourceforge.io", null);
+        KeyDown += (_, e) =>
+        {
+            if (!hk)
+            {
+                // 非录制状态:焦点不在输入框且当前选中自定义组合时,Del 删除该快捷键
+                if (e.KeyCode == Keys.Delete && e.Modifiers == Keys.None && d1.Text.Contains('+') && !a1.Focused && !c1.Focused)
+                {
+                    e.Handled = e.SuppressKeyPress = true;
+                    d1.Items.Remove(d1.Text);
+                    d1.SelectedItem = "F1";
+                }
+
+                return;
+            }
+
+            e.Handled = e.SuppressKeyPress = true;
+            if (e.KeyCode == Keys.Escape)
+            {
+                hk = false;
+                d1.SelectedItem = cfg[0] == "Middle" ? middle : cfg[0];
+            }
+            else if (e.KeyCode is Keys.Control or Keys.ControlKey or Keys.Shift or Keys.ShiftKey or Keys.Menu or Keys.LMenu or Keys.RMenu or Keys.LWin or Keys.RWin)
+            {
+                // 纯修饰键，继续等待主键
+            }
+            else if (e.Modifiers == Keys.None)
+            {
+                Controls[0].Text = cn ? "需含 Ctrl/Alt/Shift (Esc取消)" : "Needs Ctrl/Alt/Shift (Esc cancels)";
+            }
+            else
+            {
+                var combo = $"{((e.Modifiers & Keys.Control) != 0 ? "Ctrl+" : string.Empty)}{((e.Modifiers & Keys.Alt) != 0 ? "Alt+" : string.Empty)}{((e.Modifiers & Keys.Shift) != 0 ? "Shift+" : string.Empty)}{e.KeyCode}";
+                hk = false;
+                if (cfg[0] != "Middle" && cfg[0].Contains('+') && d1.Items.Contains(cfg[0]))
+                {
+                    d1.Items.Remove(cfg[0]);
+                }
+
+                d1.Items.Insert(d1.Items.IndexOf(custom), combo);
+                cfg[0] = combo;
+                d1.SelectedItem = combo;
+            }
+        };
         Paint += (_, e) =>
         {
             WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
@@ -152,7 +232,7 @@ public class MouseClickTool : Form
         };
         Load += (_, _) =>
         {
-            d1.Width = a1.Width = (int)DefaultFont.Size * 9;
+            d1.Width = a1.Width = Math.Max((int)DefaultFont.Size * 9, d1.DropDownWidth + 8);
             a0.Left = 8 + Math.Abs(a0.Width - b0.Width);
             b0.Left = a0.Right - b0.Width;
             a0.Top = t2.Height;
@@ -172,7 +252,8 @@ public class MouseClickTool : Form
             d1.Top = d0.Top - HeightDiff(d1.Height, b0.Height);
             b1.Top = b0.Top - HeightDiff(b1.Height, b0.Height);
             d2.Left = a2.Left;
-            d2.Width = a2.DropDownWidth * 4 / (cn ? 7 : 5);
+            d2.Width = Math.Max(a2.DropDownWidth * 4 / (cn ? 7 : 5), Math.Max(TextRenderer.MeasureText(cn ? "请按组合键(Esc取消)" : "Press keys (Esc cancels)", d2.Font).Width, TextRenderer.MeasureText($"{cfg[6]}(Ctrl+Alt+Shift+F12)", d2.Font).Width) + 24);
+            d2.Height = d1.Height; // 去掉 AutoSize 后必须显式设高度,否则按钮过细、下一行(复选框)上移与快捷键行重叠
             d2.Top = d1.Top - HeightDiff(d2.Height, d1.Height);
             a2.Width = d2.Width;
             Width = d2.Right + 12;
@@ -187,7 +268,9 @@ public class MouseClickTool : Form
             e0.Top = cb0.Top - HeightDiff(cb0.Height, e0.Height);
             cb1.Left = cb0.Right + ft;
             cb1.Top = cb0.Top;
-            Height = cb0.Bottom + ft;
+            h0.Left = cb0.Left;
+            h0.Top = cb0.Bottom + ft;
+            Height = h0.Bottom + ft;
         };
         var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool_V2.ini");
         if (File.Exists(ini))
@@ -205,7 +288,23 @@ public class MouseClickTool : Form
 
         Text = $"{cfg[14]} {(Environment.Is64BitProcess ? " x64" : " x86")}";
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
-        d1.SelectedItem = cfg[0];
+        if (cfg[0] != "Middle" && !d1.Items.Contains(cfg[0]))
+        {
+            if (TryParseHotkey(cfg[0], out _, out _))
+            {
+                d1.Items.Insert(d1.Items.IndexOf(custom), cfg[0]);
+                d1.SelectedItem = cfg[0];
+            }
+            else
+            {
+                d1.SelectedItem = "F1";
+            }
+        }
+        else
+        {
+            d1.SelectedItem = cfg[0] == "Middle" ? middle : cfg[0];
+        }
+
         a1.Text = cfg[1];
         a2.SelectedIndex = ctv;
         _ = bool.TryParse(cfg[10], out bool r1);
@@ -224,6 +323,7 @@ public class MouseClickTool : Form
         };
         FormClosing += (_, _) =>
         {
+            UnhookMouse();
             try
             {
                 File.WriteAllLines(ini, cfg);
@@ -513,8 +613,11 @@ public class MouseClickTool : Form
                 z?.TrySetCanceled();
             }
         };
+        hp = MouseHookCb;
         Application.Run(this);
     }
+
+    private delegate IntPtr LLMP(int nCode, IntPtr wParam, IntPtr lParam);
 
     [Flags]
     private enum MouseEventFlag
@@ -547,8 +650,7 @@ public class MouseClickTool : Form
         }
         else if (m.Msg == 0x0312)
         {
-            wait = 0;
-            ((Button)Controls[0]).PerformClick();
+            Trigger();
         }
     }
 
@@ -575,6 +677,46 @@ public class MouseClickTool : Form
         return ((value + mask) ^ mask) / 2;
     }
 
+    // 解析热键字符串："F1" → 单键；"Ctrl+Alt+K" → 修饰键组合。mods 含 MOD_NOREPEAT(0x4000)
+    private static bool TryParseHotkey(string? text, out int mods, out Keys key)
+    {
+        mods = 0x4000;
+        key = Keys.None;
+
+        // net462 的 IsNullOrEmpty 缺少 NotNullWhen 注解,显式判空让空值分析通过
+        if (text == null || text.Length == 0)
+        {
+            return false;
+        }
+
+        foreach (var t in text.Split('+'))
+        {
+            var s = t.Trim();
+            if (s.Equals("Ctrl", StringComparison.OrdinalIgnoreCase) || s.Equals("Control", StringComparison.OrdinalIgnoreCase))
+            {
+                mods |= 0x2;
+            }
+            else if (s.Equals("Alt", StringComparison.OrdinalIgnoreCase))
+            {
+                mods |= 0x1;
+            }
+            else if (s.Equals("Shift", StringComparison.OrdinalIgnoreCase))
+            {
+                mods |= 0x4;
+            }
+            else if (s.Equals("Win", StringComparison.OrdinalIgnoreCase))
+            {
+                mods |= 0x8;
+            }
+            else if (!Enum.TryParse(s, true, out key) || key == Keys.None)
+            {
+                return false;
+            }
+        }
+
+        return key != Keys.None;
+    }
+
     [DllImport("user32.dll")]
     private static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, Keys vk);
 
@@ -588,6 +730,18 @@ public class MouseClickTool : Form
     [DllImport("user32.dll")]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetWindowsHookEx(int idHook, LLMP lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll")]
+    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetModuleHandle(string? lpModuleName);
+
     private void SendInput(int cbSize)
     {
         _ = SendInput(1, ref m, cbSize);
@@ -597,6 +751,43 @@ public class MouseClickTool : Form
     {
         Controls[0].Text = $"{(z == null ? cfg[5] : cfg[6])}({cfg[0]})";
         Controls[0].Enabled = true;
+    }
+
+    private void Trigger()
+    {
+        wait = 0;
+        ((Button)Controls[0]).PerformClick();
+    }
+
+    private void HookMouse()
+    {
+        if (hh == IntPtr.Zero)
+        {
+            var cb = hp ??= MouseHookCb;
+            hh = SetWindowsHookEx(14, cb, GetModuleHandle(null), 0);
+        }
+    }
+
+    private void UnhookMouse()
+    {
+        if (hh != IntPtr.Zero)
+        {
+            UnhookWindowsHookEx(hh);
+            hh = IntPtr.Zero;
+        }
+    }
+
+    private IntPtr MouseHookCb(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        // 松开中键才触发（按下不触发，便于按住预备/瞄准；按住期间目标可能处于中键特殊状态，
+        // 如浏览器自动滚动，此时合成的连击会被吞掉）。500ms 去抖：滚轮回弹易产生二次 WM_MBUTTONUP，会误触发"停止"
+        if (nCode >= 0 && wParam == (IntPtr)0x0208 && Environment.TickCount - ht > 500)
+        {
+            ht = Environment.TickCount;
+            Trigger();
+        }
+
+        return CallNextHookEx(hh, nCode, wParam, lParam);
     }
 
     [StructLayout(LayoutKind.Sequential)]
