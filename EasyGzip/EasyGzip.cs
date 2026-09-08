@@ -20,5 +20,19 @@ if (a != null && a.Length > 1)
 }
 else
 {
-    Console.WriteLine("Command: EasyGzip.exe inputFullName compressFileName");
+    var n = "EasyGzip.exe";
+    Console.WriteLine($@"
+Usage:
+  {n} <inputFile> <outputFile>
+
+Description:
+  Compresses a file using Gzip compression.
+
+Arguments:
+  <inputFile>   The path or full name of the file to compress.
+  <outputFile>  The path or name of the resulting Gzip file.
+
+Example:
+  {n} document.txt document.txt.gz
+");
 }

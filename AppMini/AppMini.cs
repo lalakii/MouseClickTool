@@ -1,21 +1,16 @@
-﻿using System.IO.Compression;
-
-// main.
-var a = Environment.Is64BitProcess ? "x64" : "x86";
-var p = Path.Combine(Path.GetTempPath(), $"MouseClickTool_{DateTime.Now:yyyy-MM}_{a}.dll");
+﻿// main.
+Thread.CurrentThread.SetApartmentState(ApartmentState.Unknown);
+Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
+var p = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"MouseClickTool_AnyCPU.dll");
 try
 {
-    using (var f = File.Open(p, FileMode.OpenOrCreate, FileAccess.Write))
+    if (!File.Exists(p) || (DateTime.UtcNow - File.GetLastWriteTime(p)).TotalDays > 30)
     {
-        if (f.Length == 0L)
-        {
-            new GZipStream(new System.Net.WebClient().OpenRead($"https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/{a}.GZ"), CompressionMode.Decompress).CopyTo(f);
-        }
+        using System.Net.WebClient w = new();
+        w.DownloadFile("https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/MouseClickTool.dll", p);
     }
 
-    Thread.CurrentThread.SetApartmentState(ApartmentState.Unknown);
-    Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
-    Activator.CreateInstanceFrom(p, "MouseClickTool");
+    System.Reflection.Assembly.Load(File.ReadAllBytes(p)).CreateInstance("MouseClickTool");
 }
 catch
 {

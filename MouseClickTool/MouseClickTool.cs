@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -7,87 +8,217 @@ using System.Windows.Forms;
 public class MouseClickTool : Form
 {
     private readonly System.Security.Cryptography.RNGCryptoServiceProvider p = new();
+    private readonly Dictionary<byte, string> lang = [];
     private readonly string[] cfg;
-    private Input m;
-    private int wait = 3;
     private TaskCompletionSource<int>? z;
+    private int wait = 3;
+    private Input m;
     private IntPtr hh;
     private LLMP? hp;
     private int ht;
-    private bool hk;
 
     public MouseClickTool()
     {
         Application.EnableVisualStyles();
+        AutoScaleMode = AutoScaleMode.Dpi;
+        var cl = CultureInfo.CurrentUICulture;
         var dark = false;
         try
         {
             dark = (int)Microsoft.Win32.Registry.GetValue("HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "AppsUseLightTheme", -1) == 0;
-            SetProcessDPIAware();
+            SetProcessDpiAwarenessContext((IntPtr)(-4)); // v2
         }
         catch
         {
         }
 
-        var cn = CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
-        var cl = CultureInfo.CurrentUICulture;
-        cfg = ["F1", "1000", "0", "600", string.Empty,
-               cn ? "开始" : "Start ", cn ? "停止" : "Stop ",
-               cn ? "点击次数(Count):" : "Click Count:", cn ? "程序路径(Path):" : "Program Path:",
-               string.Empty, "False",
-               cn ? "脚本文件(File):" : "Select Script:",
-               string.Empty, "False", "MouseClickTool"];
-        BackColor = dark ? Color.FromArgb(50, 50, 50) : Color.GhostWhite;
+        cfg = ["F1", "1000", "0", "600", string.Empty, string.Empty, "False", string.Empty, "False", "MouseClickTool", string.Empty, string.Empty];
+        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool_V3.3.ini");
+        if (File.Exists(ini))
+        {
+            var tCfg = File.ReadAllLines(ini);
+            if (tCfg.Length == cfg.Length)
+            {
+                cfg = tCfg;
+            }
+        }
+
+        if (cl.Name.Contains("zh"))
+        {
+            lang.Add(0, "开始");
+            lang.Add(1, "停止");
+            lang.Add(2, "点击次数(Count)");
+            lang.Add(3, "程序路径(Path)");
+            lang.Add(4, "脚本文件(File)");
+            lang.Add(5, "间隔(毫秒/ms)");
+            lang.Add(6, "快捷键(Hotkey)");
+            lang.Add(7, "定时触发(Trigger)");
+            lang.Add(8, "随机扰动");
+            lang.Add(9, "记录日志");
+            lang.Add(10, "右键长按(Right Long Press)");
+            lang.Add(11, "左键(Left)");
+            lang.Add(12, "右键(Right)");
+            lang.Add(13, "左键长按(Left Long Press)");
+            lang.Add(14, "向上滚动(Scroll Up)");
+            lang.Add(15, "向下滚动(Scroll Down)");
+            lang.Add(16, "启动程序(Launch Program)");
+            lang.Add(17, "自定义脚本(Custom Script)");
+            lang.Add(18, "鼠标中键(Middle)");
+            lang.Add(19, "自定义(Custom)");
+            lang.Add(20, "按下组合键(Esc取消)");
+            lang.Add(21, "录制中: 按 Ctrl/Alt/Shift+主键, Esc 取消");
+            lang.Add(22, "快捷键 {0} 注册失败，可能已被其他程序占用");
+            lang.Add(23, "按 Del 键删除此快捷键");
+            lang.Add(24, "需含 Ctrl/Alt/Shift (Esc取消)");
+            lang.Add(25, "剩余次数");
+            lang.Add(26, "MouseClickTool 脚本");
+            lang.Add(27, "窗体缩放");
+            lang.Add(28, "语言/Language");
+            lang.Add(29, "默认语言");
+            lang.Add(30, "获取帮助");
+        }
+        else
+        {
+            lang.Add(0, "Start");
+            lang.Add(1, "Stop");
+            lang.Add(2, "Click Count");
+            lang.Add(3, "Program Path");
+            lang.Add(4, "Script File");
+            lang.Add(5, "Interval (ms)");
+            lang.Add(6, "Hotkey");
+            lang.Add(7, "Scheduled Trigger");
+            lang.Add(8, "Random Jitter");
+            lang.Add(9, "Log Output");
+            lang.Add(10, "Right Long Press");
+            lang.Add(11, "Left Click");
+            lang.Add(12, "Right Click");
+            lang.Add(13, "Left Long Press");
+            lang.Add(14, "Scroll Up");
+            lang.Add(15, "Scroll Down");
+            lang.Add(16, "Launch Program");
+            lang.Add(17, "Custom Script");
+            lang.Add(18, "Middle Click");
+            lang.Add(19, "Custom");
+            lang.Add(20, "Press key combination (Esc to cancel)");
+            lang.Add(21, "Recording: Press Ctrl/Alt/Shift + key, Esc to cancel");
+            lang.Add(22, "Failed to register hotkey {0}. It might be used by another app.");
+            lang.Add(23, "Press Del to clear hotkey");
+            lang.Add(24, "Must include Ctrl/Alt/Shift (Esc to cancel)");
+            lang.Add(25, "Remaining Clicks");
+            lang.Add(26, "MouseClickTool Script");
+            lang.Add(27, "UI Scale");
+            lang.Add(28, "Language");
+            lang.Add(29, "Default Language");
+            lang.Add(30, "Get Help");
+        }
+
+        var langIni = string.Empty;
+        if (!string.IsNullOrWhiteSpace(cfg[11]))
+        {
+            langIni = $"{cfg[11]}.ini";
+        }
+
+        if (File.Exists(langIni))
+        {
+            foreach (var it in File.ReadAllLines(langIni))
+            {
+                var arr = it.Split('=');
+                if (arr.Length > 1)
+                {
+                    var key = arr[0].Trim();
+                    if (byte.TryParse(key, out byte keyInt))
+                    {
+                        var value = arr[1].Trim();
+                        if (!string.IsNullOrWhiteSpace(value))
+                        {
+                            lang[keyInt] = value;
+                        }
+                    }
+                }
+            }
+        }
+
+        var colorPrimary = Color.FromArgb(255, 93, 89, 214);
+        BackColor = dark ? Color.FromArgb(255, 32, 32, 32) : Color.GhostWhite;
         StartPosition = FormStartPosition.CenterScreen;
         KeyPreview = true; // 焦点在下拉框/按钮上时窗体也要先收到按键，否则组合键捕获与 Esc 取消都不会触发
-        Label a0 = new() { Text = cn ? "间隔(毫秒/ms):" : "Interval/(ms):", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = cn ? "快捷键(Hotkey):" : "Hotkey(temp):", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, BackColor = Color.Transparent, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f), BackColor = t2.BackColor }, t0 = new() { AutoSize = true, Text = "?", BackColor = t2.BackColor, Font = t2.Font }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = cn ? "定时触发(Trigger):" : "Timed Trigger:" }, c0 = new() { Text = cfg[6], AutoSize = true, TextAlign = a0.TextAlign }, e0 = new() { AutoSize = true, TextAlign = ContentAlignment.BottomRight };
+        Label a0 = new() { Text = $"{lang[5]} : ", AutoSize = true, TextAlign = ContentAlignment.BottomCenter }, d0 = new() { Text = $"{lang[6]} : ", TextAlign = a0.TextAlign, AutoSize = true }, t2 = new() { Text = "×", AutoSize = true, Font = new("Consolas", DefaultFont.Size * 1.88f) }, t1 = new() { AutoSize = true, Text = "—", Font = new(t2.Font.Name, t2.Font.Size * 0.8f, FontStyle.Bold) }, b0 = new() { AutoSize = true, TextAlign = a0.TextAlign, Text = $"{lang[7]} : " }, c0 = new() { Text = lang[1], AutoSize = true, TextAlign = ContentAlignment.MiddleCenter }, e0 = new() { AutoSize = true, TextAlign = ContentAlignment.MiddleRight }, d3 = new() { AutoSize = false, TextAlign = ContentAlignment.MiddleCenter }, t3 = new() { Text = "\uE944", AutoSize = true, Font = new("Segoe Fluent Icons", 13f) };
         ComboBox a2 = new() { DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System }, d1 = new() { DropDownStyle = a2.DropDownStyle, FlatStyle = a2.FlatStyle };
         DateTimePicker b1 = new() { ShowUpDown = true, Format = DateTimePickerFormat.Custom, CustomFormat = cl.DateTimeFormat.UniversalSortableDateTimePattern };
         TextBox a1 = new(), c1 = new();
-        CheckBox cb0 = new() { Text = cn ? "随机扰动" : "Random Perturbation", AutoSize = true, Checked = false }, cb1 = new() { Text = cn ? "记录日志" : "Record Logs", AutoSize = true, Checked = false, };
+        CheckBox cb0 = new() { Text = lang[8], AutoSize = true, Checked = false }, cb1 = new() { Text = lang[9], AutoSize = true, Checked = false, };
         var runMode = 0; // 0 default, 1 createProcess, 2 runAsScript
         c1.TextChanged += (_, _) => cfg[a2.SelectedIndex switch
         {
-            6 => 9,
-            7 => 12,
+            6 => 5,
+            7 => 7,
             _ => 4,
         }] = c1.Text;
-        Label h0 = new() { AutoSize = true, Visible = false }; // 快捷键操作提示(录制中/可删除)
-        Button d2 = new() { Tag = cfg };
-        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, t0, c0, c1, cb0, e0, cb1, h0])
+
+        // Label h0 = new() { AutoSize = true, Visible = false }; // 快捷键操作提示(录制中/可删除)
+        Button d2 = new() { FlatStyle = dark ? FlatStyle.Flat : FlatStyle.System };
+        if (!float.TryParse(cfg[10], NumberStyles.Integer, cl, out float fontScale))
+        {
+            fontScale = 1f;
+        }
+        else
+        {
+            fontScale /= 100f;
+        }
+
+        foreach (var c in (Control[])[d2, a2, d1, a1, a0, b0, d0, b1, t2, t1, c0, c1, cb0, e0, cb1, d3, t3])
         {
             if (dark)
             {
+                c.BackColor = BackColor;
                 c.ForeColor = Color.GhostWhite;
             }
 
-            if (c.BackColor != t2.BackColor)
+            if (c != t1 && c != t2 && c != t3)
             {
-                c.Font = new("Segoe UI", c.Font.Size);
-                if (dark)
+                c.Font = new("Segoe UI", c.Font.Size * fontScale, FontStyle.Regular);
+            }
+            else
+            {
+                c.Font = new(c.Font.FontFamily, c.Font.Size * fontScale);
+                c.BackColor = Color.Transparent;
+            }
+
+            if (fontScale > 1 && c is CheckBox cbx)
+            {
+                var size = (int)(16 * fontScale);
+                var x = SystemInformation.MenuCheckSize.Width - 5;
+                var y = c.Bottom - SystemInformation.MenuCheckSize.Height;
+                c.Padding = new(size, 0, 0, 0);
+                cbx.Appearance = Appearance.Normal;
+                cbx.FlatStyle = FlatStyle.Flat;
+                cbx.FlatAppearance.BorderSize = 1;
+                c.Paint += (_, cbe) =>
                 {
-                    c.BackColor = BackColor;
-                }
+                    ControlPaint.DrawCheckBox(cbe.Graphics, x, y, size, size, cbx.Checked ? ButtonState.Checked : ButtonState.Normal);
+                };
             }
 
             Controls.Add(c);
         }
 
-        var strRPress = cn ? "右键长按(Right Long Press)" : "Right Long Press";
-        a2.DropDownWidth = TextRenderer.MeasureText(strRPress, a2.Font).Width;
-        a2.Items.AddRange([cn ? "左键(Left)" : "Left", cn ? "右键(Right)" : "Right", cn ? "左键长按(Left Long Press)" : "Left Long Press", strRPress, cn ? "向上滚动(Scroll Up)" : "Scroll Up", cn ? "向下滚动(Scroll Down)" : "Scroll Down", cn ? "启动程序(Launch Program)" : "Launch Program", cn ? "自定义脚本(Custom Script)" : "Custom Script"]);
+        var strRPress = lang[10];
+        a2.DropDownWidth = TextRenderer.MeasureText(strRPress, a2.Font).Width + SystemInformation.VerticalScrollBarArrowHeight;
+        a2.Items.AddRange([lang[11], lang[12], lang[13], strRPress, lang[14], lang[15], lang[16], lang[17]]);
         for (int i = 1; i < 13; i++)
         {
             d1.Items.Add($"F{i}");
         }
 
-        var middle = cn ? "鼠标中键(Middle)" : "Mouse Middle";
-        var custom = cn ? "自定义(Custom)" : "Custom";
+        var middle = lang[18];
+        var custom = lang[19];
         d1.Items.AddRange(["Home", "End", middle, custom]);
 
         // 预留最长组合键文本，避免下拉列表与收起状态截断
-        d1.DropDownWidth = Math.Max(TextRenderer.MeasureText(middle, d1.Font).Width, Math.Max(TextRenderer.MeasureText(custom, d1.Font).Width, TextRenderer.MeasureText("Ctrl+Alt+Shift+F12", d1.Font).Width)) + 16;
+        var mw = new int[] { TextRenderer.MeasureText(middle, d1.Font).Width, TextRenderer.MeasureText(custom, d1.Font).Width, SystemInformation.VerticalScrollBarArrowHeight + TextRenderer.MeasureText("Ctrl+Alt+Shift+F12", d1.Font).Width }.Max();
+        d1.DropDownWidth = mw;
         const int hotkeyId = 0x233;
+        var hk = false;
         d1.SelectedIndexChanged += (_, _) =>
         {
             UnregisterHotKey(Handle, hotkeyId);
@@ -96,10 +227,12 @@ public class MouseClickTool : Form
             if (d1.Text == custom)
             {
                 hk = true;
-                Controls[0].Text = cn ? "请按组合键(Esc取消)" : "Press keys (Esc cancels)";
-                Controls[0].Enabled = false;
-                h0.Text = cn ? "录制中:按 Ctrl/Alt/Shift+主键,Esc 取消" : "Recording: Ctrl/Alt/Shift + a key; Esc cancels";
-                h0.Visible = true;
+                d2.Text = lang[20];
+                d2.Enabled = false;
+                e0.Text = lang[21];
+                e0.Left = Width - e0.Width - 12;
+
+                // h0.Visible = true;
                 return;
             }
 
@@ -111,7 +244,7 @@ public class MouseClickTool : Form
             {
                 if (!RegisterHotKey(Handle, hotkeyId, mods, key))
                 {
-                    MessageBox.Show(cn ? $"快捷键 {d1.Text} 注册失败，可能已被其他程序占用" : $"Failed to register {d1.Text}; it may be in use", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(string.Format(lang[22], d1.Text), null, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             else
@@ -121,11 +254,13 @@ public class MouseClickTool : Form
 
             cfg[0] = d1.Text == middle ? "Middle" : d1.Text;
             UpdateText();
-            h0.Text = cn ? "按 Del 键删除此自定义快捷键" : "Press Del to remove this hotkey";
-            h0.Visible = d1.Text.Contains('+');
+            e0.Text = d1.Text.Contains('+') ? lang[23] : string.Empty;
+            e0.Left = Width - e0.Width - 12;
+
+            // h0.Visible = d1.Text.Contains('+');
             d2.Focus();
         };
-        const int ft = 6;
+        const int ft = 7;
         a1.TextChanged += (_, _) => cfg[1] = a1.Text;
         a2.SelectedIndexChanged += (_, _) =>
         {
@@ -133,17 +268,17 @@ public class MouseClickTool : Form
             switch (a2.SelectedIndex)
             {
                 case 6:
-                    c0.Text = cfg[8];
-                    c1.Text = cfg[9];
+                    c0.Text = $"{lang[3]} : ";
+                    c1.Text = cfg[5];
                     runMode = 1;
                     break;
                 case 7:
-                    c0.Text = cfg[11];
-                    c1.Text = cfg[12];
+                    c0.Text = $"{lang[4]} : ";
+                    c1.Text = cfg[7];
                     runMode = 2;
                     break;
                 default:
-                    c0.Text = cfg[7];
+                    c0.Text = $"{lang[2]} : ";
                     c1.Text = cfg[4];
                     runMode = 0;
                     break;
@@ -155,27 +290,118 @@ public class MouseClickTool : Form
         {
             if (a2.SelectedIndex > 5)
             {
-                using OpenFileDialog fd = new() { CheckFileExists = true, CheckPathExists = true, Multiselect = false, Filter = runMode == 1 ? "*.*|*.*" : $"*.msck ({(cn ? "MouseClickTool脚本" : "MouseClickTool Scripts")})|*.msck" };
+                using OpenFileDialog fd = new() { CheckFileExists = true, CheckPathExists = true, Multiselect = false, Filter = runMode == 1 ? "*.*|*.*" : $"*.msck ({lang[26]})|*.msck" };
                 if (fd.ShowDialog() == DialogResult.OK)
                 {
                     c1.Text = fd.FileName;
                 }
             }
         };
-        t2.MouseEnter += (_, _) => t2.ForeColor = Color.IndianRed;
-        t2.MouseLeave += (_, _) => t2.ForeColor = d2.ForeColor;
+        ContextMenuStrip cm = new(), cmp = new();
+        ToolStripMenuItem scaleMenu = new(lang[27]), langMenu = new(lang[28]), langDef = new(lang[29]), webMenu = new(lang[30]);
+        EventHandler handler = new((s, _) =>
+        {
+            if (s is ToolStripMenuItem ti)
+            {
+                var p = ti.OwnerItem;
+                if (p == webMenu)
+                {
+                    switch (ti.Text)
+                    {
+                        case "Github":
+                            CreateProcess("https://github.com/lalakii/MouseClickTool", null);
+                            break;
+                        case "SourceForge":
+                            CreateProcess("https://mouseclicktool.sourceforge.io", null);
+                            break;
+                    }
+                }
+                else
+                {
+                    if (p == scaleMenu)
+                    {
+                        cfg[10] = $"{ti.Tag}";
+                    }
+                    else if (p == langMenu)
+                    {
+                        cfg[11] = $"{ti.Tag}";
+                    }
+
+                    try
+                    {
+                        Application.ExitThread();
+                    }
+                    finally
+                    {
+                        Application.Restart();
+                    }
+                }
+            }
+        });
+
+        var checkedDefItem = true;
+        ToolStripMenuItem? scaleDef = null;
+        for (int i = 50; i < 401; i += 25)
+        {
+            ToolStripMenuItem mu = new($"{i}%")
+            {
+                Tag = i,
+                Checked = $"{i}" == cfg[10],
+            };
+            scaleMenu.DropDownItems.Add(mu);
+            mu.Click += handler;
+            if (mu.Checked && i != 100)
+            {
+                checkedDefItem = false;
+            }
+
+            if (i == 100)
+            {
+                scaleDef = mu;
+            }
+        }
+
+        scaleDef?.Checked = checkedDefItem;
+        langDef.Click += handler;
+        langMenu.DropDownItems.Add(langDef);
+        checkedDefItem = true;
+        foreach (var it in Directory.GetFiles(".", "*.ini"))
+        {
+            var name = Path.GetFileNameWithoutExtension(it);
+            ToolStripMenuItem mu = new(name)
+            {
+                Tag = name,
+                Checked = $"{name}" == cfg[11],
+            };
+            langMenu.DropDownItems.Add(mu);
+            mu.Click += handler;
+            if (mu.Checked)
+            {
+                checkedDefItem = false;
+            }
+        }
+
+        langDef.Checked = checkedDefItem;
+        cmp.Items.AddRange([scaleMenu, langMenu, webMenu]);
+        ToolStripMenuItem[] tsa = [new("SourceForge", null, handler), new("Github", null, handler)];
+        webMenu.DropDownItems.AddRange(tsa);
+        t3.Click += (_, _) =>
+        {
+            cmp.Show(t3, new(-t3.Width, 0));
+        };
+        t3.MouseEnter += (_, _) => t3.ForeColor = Color.LawnGreen;
+        t3.MouseLeave += (_, _) => t3.ForeColor = a0.ForeColor;
+        t2.MouseEnter += (_, _) => t2.ForeColor = Color.OrangeRed;
+        t2.MouseLeave += (_, _) => t2.ForeColor = a0.ForeColor;
         t2.Click += (_, _) =>
             {
                 Hide();
                 z?.TrySetCanceled();
                 Application.Exit();
             };
-        t1.MouseEnter += (_, _) => t1.ForeColor = Color.MediumPurple;
-        t1.MouseLeave += (_, _) => t1.ForeColor = d2.ForeColor;
+        t1.MouseEnter += (_, _) => t1.ForeColor = colorPrimary;
+        t1.MouseLeave += (_, _) => t1.ForeColor = a0.ForeColor;
         t1.Click += (_, _) => WindowState = FormWindowState.Minimized;
-        t0.MouseEnter += (_, _) => t0.ForeColor = Color.DodgerBlue;
-        t0.MouseLeave += (_, _) => t0.ForeColor = d2.ForeColor;
-        t0.Click += (_, _) => CreateProcess("https://mouseclicktool.sourceforge.io", null);
         KeyDown += (_, e) =>
         {
             if (!hk)
@@ -203,7 +429,7 @@ public class MouseClickTool : Form
             }
             else if (e.Modifiers == Keys.None)
             {
-                Controls[0].Text = cn ? "需含 Ctrl/Alt/Shift (Esc取消)" : "Needs Ctrl/Alt/Shift (Esc cancels)";
+                d2.Text = lang[24];
             }
             else
             {
@@ -223,70 +449,15 @@ public class MouseClickTool : Form
         {
             WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : WindowState;
             using var g = e.Graphics;
-            g.DrawString(Text, new("Candara", 12f), new SolidBrush(d2.ForeColor), 5, 7);
-            Pen p = new(Color.MediumPurple, 7f);
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.DrawString(Text, new("Segoe UI", 12f * fontScale), new SolidBrush(d2.ForeColor), 5, 4);
+            using Pen p = new(colorPrimary, 7.7f);
             g.DrawLine(p, Width, 0, 0, 0);
-            p.Color = dark ? Color.LightGray : Color.FromArgb(50, 0, 0, 0);
+            p.Color = dark ? Color.White : Color.DarkGray;
             p.Width = .1f;
             g.DrawRectangle(p, 5, a0.Top - 5, Width - 12, Height - a0.Top);
         };
-        Load += (_, _) =>
-        {
-            d1.Width = a1.Width = Math.Max((int)DefaultFont.Size * 9, d1.DropDownWidth + 8);
-            a0.Left = 8 + Math.Abs(a0.Width - b0.Width);
-            b0.Left = a0.Right - b0.Width;
-            a0.Top = t2.Height;
-            a1.Left = a0.Right + ft;
-            a2.Left = a1.Right + ft;
-            a2.Top = a0.Top - HeightDiff(a2.Height, a1.Height);
-            a1.Top = a0.Top - HeightDiff(a1.Height, a2.Height);
-            b0.Top = a0.Bottom + ft;
-            c0.Top = b0.Bottom + ft;
-            d0.Top = c0.Bottom + ft;
-            d0.Left = a0.Right - d0.Width;
-            b1.Left = a1.Left;
-            c0.Left = a0.Right - c0.Width;
-            c1.Top = c0.Top - HeightDiff(c1.Height, c0.Height);
-            c1.Left = c0.Right + ft;
-            d1.Left = a1.Left;
-            d1.Top = d0.Top - HeightDiff(d1.Height, b0.Height);
-            b1.Top = b0.Top - HeightDiff(b1.Height, b0.Height);
-            d2.Left = a2.Left;
-            d2.Width = Math.Max(a2.DropDownWidth * 4 / (cn ? 7 : 5), Math.Max(TextRenderer.MeasureText(cn ? "请按组合键(Esc取消)" : "Press keys (Esc cancels)", d2.Font).Width, TextRenderer.MeasureText($"{cfg[6]}(Ctrl+Alt+Shift+F12)", d2.Font).Width) + 24);
-            d2.Height = d1.Height; // 去掉 AutoSize 后必须显式设高度,否则按钮过细、下一行(复选框)上移与快捷键行重叠
-            d2.Top = d1.Top - HeightDiff(d2.Height, d1.Height);
-            a2.Width = d2.Width;
-            Width = d2.Right + 12;
-            b1.Width = d2.Right - d1.Left;
-            c1.Width = b1.Width;
-            t2.Left = Width - t2.Width - 4;
-            t1.Left = t2.Left - t2.Width;
-            t1.Top = HeightDiff(t2.Height, t1.Height);
-            t0.Left = t1.Left - t2.Width - 3;
-            cb0.Left = d0.Left;
-            cb0.Top = d2.Bottom + ft;
-            e0.Top = cb0.Top - HeightDiff(cb0.Height, e0.Height);
-            cb1.Left = cb0.Right + ft;
-            cb1.Top = cb0.Top;
-            h0.Left = cb0.Left;
-            h0.Top = cb0.Bottom + ft;
-            Height = h0.Bottom + ft;
-        };
-        var ini = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MouseClickTool_V2.ini");
-        if (File.Exists(ini))
-        {
-            var tCfg = File.ReadAllLines(ini);
-            if (tCfg.Length == cfg.Length)
-            {
-                // 仅恢复数值设置项，防止配置文件里的旧语言字符串覆盖当前的 UI 语言
-                foreach (int i in new int[] { 0, 1, 2, 3, 4, 9, 10, 12, 13, 14 })
-                {
-                    cfg[i] = tCfg[i];
-                }
-            }
-        }
-
-        Text = $"{cfg[14]} {(Environment.Is64BitProcess ? " x64" : " x86")}";
         int.TryParse(cfg[2], NumberStyles.Integer, cl, out int ctv);
         if (cfg[0] != "Middle" && !d1.Items.Contains(cfg[0]))
         {
@@ -307,19 +478,71 @@ public class MouseClickTool : Form
 
         a1.Text = cfg[1];
         a2.SelectedIndex = ctv;
-        _ = bool.TryParse(cfg[10], out bool r1);
-        _ = bool.TryParse(cfg[13], out bool r9);
+        Load += (_, _) =>
+        {
+            a0.Left = Math.Abs(a0.Width - b0.Width) + ft;
+            b0.Left = a0.Right - b0.Width;
+            a0.Top = t2.Height;
+            a1.Left = a0.Right + ft;
+            d1.Width = a1.Width = Math.Max((int)DefaultFont.Size * 9, d1.DropDownWidth + ft);
+            a2.Left = a1.Right + ft;
+            a2.Top = a0.Top - HeightDiff(a2.Height, a1.Height);
+            a1.Top = a0.Top - HeightDiff(a1.Height, a2.Height);
+            b0.Top = a0.Bottom + ft;
+            c0.Top = b0.Bottom + ft;
+            d0.Top = c0.Bottom + ft;
+            d0.Left = a0.Right - d0.Width;
+            b1.Left = a1.Left;
+            c0.Left = a0.Right - c0.Width;
+            c1.Top = c0.Top - HeightDiff(c1.Height, c0.Height);
+            c1.Left = c0.Right + ft;
+            d1.Left = a1.Left;
+            d1.Top = d0.Top - HeightDiff(d1.Height, b0.Height);
+            b1.Top = b0.Top - HeightDiff(b1.Height, b0.Height);
+            d2.Left = a2.Left;
+            d2.Width = new int[] { a2.DropDownWidth, TextRenderer.MeasureText(lang[20], d2.Font).Width, TextRenderer.MeasureText($"{lang[1]} (Ctrl+Alt+Shift+F12)", d2.Font).Width }.Max();
+            d2.Height = d1.Height; // 去掉 AutoSize 后必须显式设高度,否则按钮过细、下一行(复选框)上移与快捷键行重叠
+            d2.Top = d1.Top - HeightDiff(d2.Height, d1.Height);
+            d3.Height = d2.Height - 2;
+            d3.Top = d2.Top + 1;
+            d3.Left = d2.Left + 1;
+            a2.Width = d2.Width;
+            Width = d2.Right + 12;
+            b1.Width = d2.Right - d1.Left;
+            c1.Width = b1.Width;
+            t2.Left = Width - t2.Width - ft;
+            t1.Left = t2.Left - t2.Width;
+            t2.Top = 1;
+            t1.Top = (int)(HeightDiff(t2.Height, t1.Height) + 0.5);
+            t3.Left = t1.Left - t1.Width - (int)(12 * fontScale);
+            t3.Top = t2.Top + HeightDiff(t2.Height, t3.Height);
+            cb0.Left = ft * 2;
+            cb0.Top = d2.Bottom + ft;
+            e0.Top = cb0.Top - HeightDiff(cb0.Height, e0.Height);
+            cb1.Left = cb0.Left;
+            cb1.Top = cb0.Bottom + ft - 3;
+            e0.MaximumSize = new(Width - cb0.Width - 3, 0);
+            e0.Left = Width - e0.Width - 12;
+
+            // h0.Left = cb0.Left;
+            // h0.Top = cb0.Bottom + ft;
+            Height = cb1.Bottom + 16;
+        };
+
+        Text = $"{cfg[9]}";
+        _ = bool.TryParse(cfg[6], out bool r1);
+        _ = bool.TryParse(cfg[8], out bool r9);
         cb1.Checked = r9;
         cb0.Checked = r1;
         cb0.CheckedChanged += (_, _) =>
         {
             r1 = cb0.Checked;
-            cfg[10] = $"{r1}";
+            cfg[6] = $"{r1}";
         };
         cb1.CheckedChanged += (_, _) =>
         {
             r9 = cb1.Checked;
-            cfg[13] = $"{r9}";
+            cfg[8] = $"{r9}";
         };
         FormClosing += (_, _) =>
         {
@@ -333,280 +556,305 @@ public class MouseClickTool : Form
             }
         };
         byte[] r0 = new byte[4];
+        if (dark)
+        {
+            d2.TextChanged += (_, _) =>
+            {
+                d3.Text = d2.Text;
+            };
+            d2.EnabledChanged += (_, _) =>
+            {
+                d3.Visible = !d2.Enabled;
+                d3.Width = d2.Width - 2;
+                d3.BringToFront();
+            };
+        }
+
         d2.Click += (_, _) =>
         {
             d2.Enabled = false;
             if (a2.Enabled && z == null)
             {
-                if (int.TryParse(a1.Text, out int delay) && delay > -1)
+                _ = ulong.TryParse(a1.Text, out ulong delay);
+                a1.Enabled = a2.Enabled = b1.Enabled = c1.Enabled = false;
+                var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                if ((a2.SelectedIndex & 1) == 1)
                 {
-                    a1.Enabled = a2.Enabled = b1.Enabled = c1.Enabled = false;
-                    var downFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
-                    var upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
-                    if ((a2.SelectedIndex & 1) == 1)
+                    downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                    upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                }
+
+                var mouseWheel = a2.SelectedIndex > 3;
+                if (mouseWheel)
+                {
+                    downFlag = MouseEventFlag.MOUSEEVENTF_WHEEL;
+                    int.TryParse(cfg[3], NumberStyles.Integer, cl, out int sc);
+                    m.mi.mouseData = a2.SelectedIndex > 4 ? -sc : sc;
+                }
+
+                var longPress = a2.SelectedIndex > 1;
+                Task.Run(async () =>
+                {
+                    for (int i = 1; i < wait; i++)
                     {
-                        downFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
-                        upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                        Invoke(() => d2.Text = $"{wait - i}");
+                        await Task.Delay(1000);
                     }
 
-                    var mouseWheel = a2.SelectedIndex > 3;
-                    if (mouseWheel)
+                    var pressed = false;
+                    var size = Marshal.SizeOf(m);
+                    z = new();
+                    var tg = (int)(b1.Value - DateTime.Now).TotalMilliseconds;
+                    ulong.TryParse(c1.Text.Trim(), NumberStyles.Integer, cl, out ulong total);
+                    var unrestricted = total < 1;
+                    Invoke(() =>
                     {
-                        downFlag = MouseEventFlag.MOUSEEVENTF_WHEEL;
-                        int.TryParse(cfg[3], NumberStyles.Integer, cl, out int sc);
-                        m.mi.mouseData = a2.SelectedIndex > 4 ? -sc : sc;
-                    }
-
-                    var longPress = a2.SelectedIndex > 1;
-                    Task.Run(async () =>
-                    {
-                        for (int i = 1; i < wait; i++)
+                        UpdateText();
+                        e0.Visible = !unrestricted;
+                        if (e0.Visible)
                         {
-                            Invoke(() => d2.Text = $"{wait - i}");
-                            await Task.Delay(1000);
+                            var arr = e0.Text.Split(':');
+                            if (arr.Length > 1 && ulong.TryParse(arr[1], out ulong savedTotal) && savedTotal > 0)
+                            {
+                                total = savedTotal;
+                            }
                         }
-
-                        var pressed = false;
-                        var size = Marshal.SizeOf(m);
-                        z = new();
-                        var tg = b1.Value < DateTime.Now;
-                        ulong.TryParse(c1.Text.Trim(), NumberStyles.Integer, cl, out ulong num);
-                        var unrestricted = num < 1;
-                        Invoke(() =>
+                    });
+                    var runAsScript = runMode == 2;
+                    var scriptIndex = 0;
+                    var scriptCount = 0;
+                    string[]? scriptArr = null;
+                    if (runAsScript)
+                    {
+                        var scriptFile = c1.Text.Trim();
+                        if (File.Exists(scriptFile))
                         {
-                            UpdateText();
-                            e0.Visible = !unrestricted;
-                        });
-                        var runAsScript = runMode == 2;
-                        string[]? scriptArr = null;
-                        var scriptIndex = 0;
-                        var scriptCount = 0;
+                            scriptArr = File.ReadAllLines(scriptFile);
+                            scriptCount = scriptArr.Length;
+                        }
+                        else
+                        {
+                            z?.TrySetCanceled();
+                        }
+                    }
+
+                    if (tg > 0)
+                    {
+                        await Task.WhenAny(Task.Delay(tg), z?.Task);
+                    }
+
+                    for (ulong count = 0; z != null && !z.Task.IsCanceled && (unrestricted || count < total || longPress); count++)
+                    {
                         if (runAsScript)
                         {
-                            var scriptFile = c1.Text.Trim();
-                            if (File.Exists(scriptFile))
+                            // run as script
+                            if (scriptArr != null)
                             {
-                                scriptArr = File.ReadAllLines(scriptFile);
-                                scriptCount = scriptArr.Length;
-                            }
-                            else
-                            {
-                                z?.TrySetCanceled();
-                            }
-                        }
-
-                        for (ulong count = 0; unrestricted || count < num || longPress; count++)
-                        {
-                            if (z?.Task.IsCanceled == true)
-                            {
-                                break;
-                            }
-
-                            if (tg)
-                            {
-                                if (runMode == 1)
+                                if (scriptIndex > scriptCount - 1)
                                 {
-                                    CreateProcess("cmd.exe", $"/c \"{c1.Text}\"");
-                                    break;
+                                    scriptIndex = 0;
                                 }
-                                else if (runAsScript)
+
+                                var rawLine = scriptArr[scriptIndex].Trim().TrimEnd(')');
+                                var rIndex = rawLine.IndexOf('(');
+                                string[]? scriptLine = null;
+                                if (rIndex != -1)
                                 {
-                                    // run as script
-                                    if (scriptArr != null)
+                                    scriptLine = new string[2];
+                                    scriptLine[0] = rawLine.Substring(0, rIndex);
+                                    scriptLine[1] = rawLine.Substring(rIndex + 1);
+                                }
+
+                                scriptIndex++;
+                                if (scriptLine == null || scriptLine[0].StartsWith("#"))
+                                {
+                                    continue;
+                                }
+
+                                if (scriptLine.Length > 1)
+                                {
+                                    var eventType = scriptLine[0].Trim().ToLower();
+                                    var scriptCommand = scriptLine[1];
+                                    var args = scriptCommand.Split(',');
+                                    pressed = false;
+                                    if (args.Length > 1)
                                     {
-                                        if (scriptIndex > scriptCount - 1)
+                                        var arg0 = args[0].Trim();
+                                        var arg1 = args[1].Trim();
+                                        if (!arg0.Equals("null", StringComparison.OrdinalIgnoreCase) && !arg1.Equals("null", StringComparison.OrdinalIgnoreCase))
                                         {
-                                            scriptIndex = 0;
-                                        }
-
-                                        var rawLine = scriptArr[scriptIndex].Trim().TrimEnd(')');
-                                        var rIndex = rawLine.IndexOf('(');
-                                        string[]? scriptLine = null;
-                                        if (rIndex != -1)
-                                        {
-                                            scriptLine = new string[2];
-                                            scriptLine[0] = rawLine.Substring(0, rIndex);
-                                            scriptLine[1] = rawLine.Substring(rIndex + 1);
-                                        }
-
-                                        scriptIndex++;
-                                        if (scriptLine == null || scriptLine[0].StartsWith("#"))
-                                        {
-                                            continue;
-                                        }
-
-                                        if (scriptLine.Length > 1)
-                                        {
-                                            var eventType = scriptLine[0].Trim().ToLower();
-                                            var scriptCommand = scriptLine[1];
-                                            var args = scriptCommand.Split(',');
-                                            pressed = false;
-                                            if (args.Length > 1)
-                                            {
-                                                var arg0 = args[0].Trim();
-                                                var arg1 = args[1].Trim();
-                                                if (!arg0.Equals("null", StringComparison.OrdinalIgnoreCase) && !arg1.Equals("null", StringComparison.OrdinalIgnoreCase))
-                                                {
-                                                    _ = int.TryParse(arg0, out int posX);
-                                                    _ = int.TryParse(arg1, out int posY);
-                                                    var screen = Screen.PrimaryScreen.Bounds;
-                                                    m.mi.dx = posX * 65535 / screen.Width;
-                                                    m.mi.dy = posY * 65535 / screen.Height;
-                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_MOVE | MouseEventFlag.MOUSEEVENTF_ABSOLUTE;
-                                                    SendInput(size);
-                                                }
-                                            }
-
-                                            if (r9)
-                                            {
-                                                try
-                                                {
-                                                    File.AppendAllText("MouseClickTool.LOG", $"[{DateTime.Now}] {eventType} {scriptCommand}\r\n");
-                                                }
-                                                catch
-                                                {
-                                                }
-                                            }
-
-                                            switch (eventType)
-                                            {
-                                                case "delay":
-                                                case "sleep":
-                                                    if (int.TryParse(scriptCommand, out delay))
-                                                    {
-                                                        await Task.WhenAny(Task.Delay(delay), z?.Task);
-                                                    }
-
-                                                    break;
-                                                case "left_click":
-                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
-                                                    pressed = true;
-                                                    break;
-                                                case "right_click":
-                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
-                                                    pressed = true;
-                                                    break;
-                                                case "left_click_long":
-                                                    upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
-                                                    if (args.Length > 2 && args[2].Contains("1"))
-                                                    {
-                                                        upFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
-                                                    }
-
-                                                    m.mi.dwFlags = upFlag;
-                                                    break;
-                                                case "right_click_long":
-                                                    upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
-                                                    if (args.Length > 2 && args[2].Contains("1"))
-                                                    {
-                                                        upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
-                                                    }
-
-                                                    m.mi.dwFlags = upFlag;
-                                                    break;
-                                                case "mouse_wheel":
-                                                    m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_WHEEL;
-                                                    int.TryParse(args[0], NumberStyles.Integer, cl, out int sc);
-                                                    m.mi.mouseData = sc;
-                                                    break;
-                                                case "create_process":
-                                                    CreateProcess("cmd.exe", $"/c {scriptCommand}");
-                                                    continue;
-                                                case "title":
-                                                    Text = scriptCommand.Trim('\"');
-                                                    cfg[14] = Text;
-                                                    Invoke((MethodInvoker)Invalidate);
-                                                    continue;
-                                                case "exit":
-                                                case "quit":
-                                                    InvokeOnClick(t2, null);
-                                                    continue;
-                                                case "once":
-                                                case "break":
-                                                    z?.TrySetCanceled();
-                                                    continue;
-                                                default:
-                                                    continue;
-                                            }
-
+                                            _ = int.TryParse(arg0, out int posX);
+                                            _ = int.TryParse(arg1, out int posY);
+                                            var screen = Screen.PrimaryScreen.Bounds;
+                                            m.mi.dx = posX * 65535 / screen.Width;
+                                            m.mi.dy = posY * 65535 / screen.Height;
+                                            m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_MOVE | MouseEventFlag.MOUSEEVENTF_ABSOLUTE;
                                             SendInput(size);
-                                            if (pressed)
-                                            {
-                                                m.mi.dwFlags = m.mi.dwFlags == MouseEventFlag.MOUSEEVENTF_LEFTDOWN ? MouseEventFlag.MOUSEEVENTF_LEFTUP : MouseEventFlag.MOUSEEVENTF_RIGHTUP;
-                                                SendInput(size);
-                                            }
                                         }
-
-                                        continue;
-                                    }
-                                }
-                                else
-                                {
-                                    if (!pressed || mouseWheel)
-                                    {
-                                        m.mi.dwFlags = downFlag;
-                                        SendInput(size);
                                     }
 
-                                    if (!longPress)
+                                    if (r9)
                                     {
-                                        m.mi.dwFlags = upFlag;
-                                        SendInput(size);
-                                        Invoke(() =>
+                                        try
                                         {
-                                            e0.Text = $"{(cn ? "剩余次数" : "Remaining Runs")}:{num - count - 1}";
-                                            e0.Left = Width - e0.Width - 12;
-                                        });
+                                            File.AppendAllText("MouseClickTool.LOG", $"[{DateTime.Now}] {eventType} {scriptCommand}${Environment.NewLine}");
+                                        }
+                                        catch
+                                        {
+                                        }
                                     }
-                                    else
+
+                                    switch (eventType)
                                     {
-                                        m.mi.dwFlags = upFlag;
-                                        pressed = true;
+                                        case "delay":
+                                        case "sleep":
+                                            if (ulong.TryParse(scriptCommand, out delay))
+                                            {
+                                                await Task.WhenAny(Task.Delay(TimeSpan.FromMilliseconds(delay)), z?.Task);
+                                            }
+
+                                            break;
+                                        case "left_click":
+                                            m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                                            pressed = true;
+                                            break;
+                                        case "right_click":
+                                            m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                                            pressed = true;
+                                            break;
+                                        case "left_click_long":
+                                            upFlag = MouseEventFlag.MOUSEEVENTF_LEFTUP;
+                                            if (args.Length > 2 && args[2].Contains("1"))
+                                            {
+                                                upFlag = MouseEventFlag.MOUSEEVENTF_LEFTDOWN;
+                                            }
+
+                                            m.mi.dwFlags = upFlag;
+                                            break;
+                                        case "right_click_long":
+                                            upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                                            if (args.Length > 2 && args[2].Contains("1"))
+                                            {
+                                                upFlag = MouseEventFlag.MOUSEEVENTF_RIGHTDOWN;
+                                            }
+
+                                            m.mi.dwFlags = upFlag;
+                                            break;
+                                        case "mouse_wheel":
+                                            m.mi.dwFlags = MouseEventFlag.MOUSEEVENTF_WHEEL;
+                                            if (args.Length > 0)
+                                            {
+                                                int.TryParse(args[0], NumberStyles.Integer, cl, out int sc);
+                                                m.mi.mouseData = sc;
+                                            }
+
+                                            break;
+                                        case "create_process":
+                                            CreateProcess("cmd.exe", $"/c {scriptCommand}");
+                                            continue;
+                                        case "title":
+                                            Invoke((MethodInvoker)(() =>
+                                            {
+                                                Text = scriptCommand.Trim('\"');
+                                                cfg[9] = Text;
+                                                Invalidate();
+                                            }));
+                                            continue;
+                                        case "exit":
+                                        case "quit":
+                                            Invoke((MethodInvoker)(() => InvokeOnClick(t2, null)));
+                                            continue;
+                                        case "once":
+                                        case "break":
+                                            z?.TrySetCanceled();
+                                            continue;
+                                        default:
+                                            continue;
+                                    }
+
+                                    SendInput(size);
+                                    if (pressed)
+                                    {
+                                        m.mi.dwFlags = m.mi.dwFlags == MouseEventFlag.MOUSEEVENTF_LEFTDOWN ? MouseEventFlag.MOUSEEVENTF_LEFTUP : MouseEventFlag.MOUSEEVENTF_RIGHTUP;
+                                        SendInput(size);
                                     }
                                 }
+
+                                continue;
+                            }
+                        }
+                        else if (runMode == 1)
+                        {
+                            CreateProcess("cmd.exe", $"/c \"{c1.Text}\"");
+                            break;
+                        }
+                        else
+                        {
+                            if (!pressed || mouseWheel)
+                            {
+                                m.mi.dwFlags = downFlag;
+                                SendInput(size);
+                            }
+
+                            if (!longPress)
+                            {
+                                m.mi.dwFlags = upFlag;
+                                SendInput(size);
+                                Invoke(() =>
+                                {
+                                    if (e0.Visible)
+                                    {
+                                        e0.Text = $"{lang[25]}: {total - count - 1}";
+                                        e0.Left = Width - e0.Width - 12;
+                                    }
+                                });
                             }
                             else
                             {
-                                tg = b1.Value < DateTime.Now;
+                                m.mi.dwFlags = upFlag;
+                                pressed = true;
                             }
+                        }
 
-                            if (delay != 0)
+                        if (delay != 0)
+                        {
+                            ulong r5 = delay;
+                            if (r1)
                             {
-                                int r5 = delay;
-                                if (r1)
-                                {
-                                    // 随机系数：0.8 ~ 1.2
-                                    p.GetBytes(r0);
-                                    int r2 = BitConverter.ToInt32(r0, 0);
-                                    double r3 = (r2 & 0x7FFFFFFF) / (double)0x7FFFFFFF;
-                                    double r4 = (r3 * (1.2 - 0.8)) + 0.8;
-                                    r5 = (int)Math.Round(delay * r4);
-                                }
-
-                                await Task.WhenAny(Task.Delay(r5), z?.Task);
+                                // 随机系数：0.8 ~ 1.2
+                                p.GetBytes(r0);
+                                int r2 = BitConverter.ToInt32(r0, 0);
+                                double r3 = (r2 & 0x7FFFFFFF) / (double)0x7FFFFFFF;
+                                double r4 = (r3 * (1.2 - 0.8)) + 0.8;
+                                r5 = (ulong)Math.Round(delay * r4);
                             }
+
+                            await Task.WhenAny(Task.Delay(TimeSpan.FromMilliseconds(r5)), z?.Task);
+                        }
+                    }
+
+                    if (longPress && !mouseWheel)
+                    {
+                        SendInput(size);
+                    }
+
+                    await Task.Delay(delay == 0 ? 5 : 0);
+                    wait = 3;
+                    z = null;
+                    Invoke(() =>
+                    {
+                        if (d1.Text.Contains("+"))
+                        {
+                            e0.Text = lang[23];
+                            e0.Left = Width - e0.Width - 12;
                         }
 
-                        if (longPress && !mouseWheel)
-                        {
-                            SendInput(size);
-                        }
-
-                        await Task.Delay(delay == 0 ? 5 : 0);
-                        wait = 3;
-                        z = null;
-                        Invoke(() =>
-                        {
-                            a1.Enabled = a2.Enabled = b1.Enabled = c1.Enabled = true;
-                            b1.Value = DateTime.Now;
-                            UpdateText();
-                        });
+                        a1.Enabled = a2.Enabled = b1.Enabled = c1.Enabled = true;
+                        b1.Value = DateTime.Now;
+                        UpdateText();
                     });
-                }
-                else
-                {
-                    MessageBox.Show(cn ? "鼠标点击间隔必须是一个自然数" : "Mouse click intervals must be natural numbers", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                });
             }
             else
             {
@@ -656,18 +904,7 @@ public class MouseClickTool : Form
 
     private static void CreateProcess(string path, string? args)
     {
-        ThreadPool.UnsafeQueueUserWorkItem(
-            _ =>
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(path, args);
-            }
-            catch
-            {
-            }
-        },
-            0);
+        Task.Run(() => System.Diagnostics.Process.Start(path, args));
     }
 
     private static int HeightDiff(int h0, int h1)
@@ -725,7 +962,7 @@ public class MouseClickTool : Form
     private static extern int SendInput(int nInputs, ref Input pInputs, int cbSize);
 
     [DllImport("user32.dll")]
-    private static extern bool SetProcessDPIAware();
+    private static extern bool SetProcessDpiAwarenessContext(IntPtr value);
 
     [DllImport("user32.dll")]
     private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
@@ -739,7 +976,7 @@ public class MouseClickTool : Form
     [DllImport("user32.dll")]
     private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
-    [DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr GetModuleHandle(string? lpModuleName);
 
     private void SendInput(int cbSize)
@@ -749,22 +986,22 @@ public class MouseClickTool : Form
 
     private void UpdateText()
     {
-        Controls[0].Text = $"{(z == null ? cfg[5] : cfg[6])}({cfg[0]})";
-        Controls[0].Enabled = true;
+        var d2 = Controls.OfType<Button>().First();
+        d2.Text = $"{(z == null ? lang[0] : lang[1])} ({cfg[0]})";
+        d2.Enabled = true;
     }
 
     private void Trigger()
     {
         wait = 0;
-        ((Button)Controls[0]).PerformClick();
+        Controls.OfType<Button>().FirstOrDefault().PerformClick();
     }
 
     private void HookMouse()
     {
         if (hh == IntPtr.Zero)
         {
-            var cb = hp ??= MouseHookCb;
-            hh = SetWindowsHookEx(14, cb, GetModuleHandle(null), 0);
+            hh = SetWindowsHookEx(14, hp ??= MouseHookCb, GetModuleHandle(null), 0);
         }
     }
 

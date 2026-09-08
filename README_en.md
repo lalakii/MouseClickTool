@@ -20,6 +20,7 @@
 - Automatically saves settings to a temporary file (no registry modifications)
 - Random perturbation to prevent detection  
 - Customizable scripts (Beta): [How do I write scripts?](https://github.com/lalakii/MouseClickTool/blob/master/README_en.md#write-custom-scripts)
+- Custom language file: Place it in the same directory as the application -> [English Language Template](https://github.com/lalakii/MouseClickTool/blob/master/lang/Custom%20Language.ini)
 
 ## Download
 

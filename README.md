@@ -22,10 +22,11 @@
 - 已适配深色模式
 - 已添加随机扰动，避免被检测
 - 自定义脚本(Beta) [如何编写脚本?](https://github.com/lalakii/MouseClickTool?tab=readme-ov-file#%E7%BC%96%E5%86%99%E8%87%AA%E5%AE%9A%E4%B9%89%E8%84%9A%E6%9C%AC)
+- 自定义语言，和应用程序放在同一目录下 -> [英文语言模板](https://github.com/lalakii/MouseClickTool/blob/master/lang/Custom%20Language.ini)
 
 ## 下载
 
-[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://1828226239.share.123pan.cn/123pan/jE3Sjv-LEGMd) | [蓝奏云](https://a01.lanzout.com/b0he68jbg) **密码: 60im**
+[本地下载](https://github.com/lalakii/MouseClickTool/releases) | [123 云盘](https://1828226239.share.123pan.cn/123pan/jE3Sjv-nMBMd) | [蓝奏云](https://a01.lanzoui.com/b0he6t8sd) **密码: enga**
 
 <img src="https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/img/MouseClickTool.png?v=2.0" alt="Screenshot of MouseClickTool"/>
 

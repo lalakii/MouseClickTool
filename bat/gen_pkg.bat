@@ -12,6 +12,7 @@ if EXIST "bin\dll\net462\MouseClickTool.dll" (
     del .\%projectName%\x86.GZ /Q > NUL 2>&1
     del .\%projectName%\x64.GZ /Q > NUL 2>&1
     cd .\bin\dll\net462\ 
+    copy MouseClickTool.dll ..\..\..\%projectName%\
     %procName% a -tgzip -mx9 -mtm- ..\..\..\%projectName%\x86.GZ MouseClickTool.dll > NUL 2>&1
     copy  ..\..\..\%projectName%\x86.GZ  ..\..\..\%projectName%\x64.GZ > NUL 2>&1
 ) else (
