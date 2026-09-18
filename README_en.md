@@ -38,6 +38,7 @@ The MouseClickTool script file has the extension "*.msck".
   + Comments should be on a separate line and not mixed with the code
   + There should be no extra spaces on the line containing the code
   + Blank lines within the file will not affect script execution; additional blank lines can be added for easier readability.
+  + Scripts can start external programs through `create_process`; do not run scripts from untrusted sources or whose contents you have not reviewed
 
   [Demo script example](./Scripts/demo_en.msck)
 
@@ -65,8 +66,8 @@ right_click_long(x,y,type)
 # Mouse wheel scrolling, 1 parameter, the value can be positive or negative, indicating whether the scrolling direction is up or down.
 mouse_wheel(value)
 
-# Launch an external program, only one parameter is required: fileName, which represents the full path to the program and can include application startup parameters.
-create_process("fileName")
+# Launch an external program; fileName is its full path and arguments are optional.
+create_process("fileName" arguments)
 
 # Stop the running script; no parameters are required. Do not use this function if looping is required.
 once()

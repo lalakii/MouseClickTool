@@ -9,6 +9,7 @@
 		<ProjectReference Include="..\MouseClickTool\MouseClickTool.csproj">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
+		<EmbeddedResource Include="..\bin\dll\$(TargetFramework)\MouseClickTool.dll" LogicalName="MouseClickTool.dll" />
 		<None Remove=".gitignore" />
 		<PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
 			<PrivateAssets>all</PrivateAssets>

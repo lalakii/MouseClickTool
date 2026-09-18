@@ -40,6 +40,7 @@ MouseClickTool 脚本文件，文件后缀名为"*.msck"
   + 注释应当另起一行，不要和代码混在一起
   + 代码所在的行，不应出现多余空格
   + 文件内的空行不会影响脚本执行，为了便于阅读可以多加空行
+  + 脚本可以通过 `create_process` 启动外部程序，请勿运行来源不明或内容未经检查的脚本
 
   [查看Demo脚本示例](./Scripts/demo.msck)
 
@@ -67,8 +68,8 @@ right_click_long(x,y,type)
 # 鼠标滚轮滚动, 1个参数, value可以为是正数或负数, 分别是向上或向下滚动
 mouse_wheel(value)
 
-# 启动程序, 1个参数, fileName表示程序完整路径, 可携带参数
-create_process("fileName")
+# 启动程序, fileName表示程序完整路径, arguments表示可选参数
+create_process("fileName" arguments)
 
 # 结束当前脚本, 无参数, 脚本默认循环执行, 需要循环执行时不要添加
 once()
