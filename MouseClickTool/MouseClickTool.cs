@@ -644,6 +644,10 @@ public class MouseClickTool : Form
                         await Task.WhenAny(Task.Delay(tg), z?.Task);
                     }
 
+                    using var logWriter = CreateLogWriter(z != null && !z.Task.IsCanceled && r9 && runAsScript && scriptArr != null);
+                    var logCount = 0;
+                    var logTick = Environment.TickCount;
+                    var uiTick = Environment.TickCount;
                     for (ulong count = 0; z != null && !z.Task.IsCanceled && (unrestricted || count < total || longPress); count++)
                     {
                         if (runAsScript)
@@ -694,11 +698,18 @@ public class MouseClickTool : Form
                                         }
                                     }
 
-                                    if (r9)
+                                    if (logWriter != null)
                                     {
                                         try
                                         {
-                                            File.AppendAllText("MouseClickTool.LOG", $"[{DateTime.Now}] {eventType} {scriptCommand}${Environment.NewLine}");
+                                            logWriter.WriteLine($"[{DateTime.Now}] {eventType} {scriptCommand}$");
+                                            var tick = Environment.TickCount;
+                                            if (++logCount >= 100 || tick - logTick >= 1000)
+                                            {
+                                                logWriter.Flush();
+                                                logCount = 0;
+                                                logTick = tick;
+                                            }
                                         }
                                         catch
                                         {
@@ -801,14 +812,20 @@ public class MouseClickTool : Form
                             {
                                 m.mi.dwFlags = upFlag;
                                 SendInput(size);
-                                Invoke(() =>
+                                if (!unrestricted)
                                 {
-                                    if (e0.Visible)
+                                    var remaining = total - count - 1;
+                                    var tick = Environment.TickCount;
+                                    if (remaining == 0 || tick - uiTick >= 100)
                                     {
-                                        e0.Text = $"{lang[25]}: {total - count - 1}";
-                                        e0.Left = Width - e0.Width - 12;
+                                        uiTick = tick;
+                                        Invoke(() =>
+                                        {
+                                            e0.Text = $"{lang[25]}: {remaining}";
+                                            e0.Left = Width - e0.Width - 12;
+                                        });
                                     }
-                                });
+                                }
                             }
                             else
                             {
@@ -905,6 +922,22 @@ public class MouseClickTool : Form
     private static void CreateProcess(string path, string? args)
     {
         Task.Run(() => System.Diagnostics.Process.Start(path, args));
+    }
+
+    private static StreamWriter? CreateLogWriter(bool enabled)
+    {
+        if (enabled)
+        {
+            try
+            {
+                return new("MouseClickTool.LOG", true);
+            }
+            catch
+            {
+            }
+        }
+
+        return null;
     }
 
     private static int HeightDiff(int h0, int h1)
