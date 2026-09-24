@@ -76,6 +76,8 @@ public class MouseClickTool : Form
             lang.Add(28, "语言/Language");
             lang.Add(29, "默认语言");
             lang.Add(30, "获取帮助");
+            lang.Add(31, "安全警告");
+            lang.Add(32, "此脚本可以启动外部程序。仅当你信任脚本来源时才继续。\n\n脚本文件：{0}");
         }
         else
         {
@@ -110,6 +112,8 @@ public class MouseClickTool : Form
             lang.Add(28, "Language");
             lang.Add(29, "Default Language");
             lang.Add(30, "Get Help");
+            lang.Add(31, "Security Warning");
+            lang.Add(32, "This script can start external programs. Continue only if you trust its source.\n\nScript file: {0}");
         }
 
         var langIni = string.Empty;
@@ -632,6 +636,15 @@ public class MouseClickTool : Form
                         {
                             scriptArr = File.ReadAllLines(scriptFile);
                             scriptCount = scriptArr.Length;
+                            if (HasCreateProcessCommand(scriptArr))
+                            {
+                                var result = DialogResult.No;
+                                Invoke(() => result = MessageBox.Show(string.Format(lang[32], scriptFile), lang[31], MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
+                                if (result != DialogResult.Yes)
+                                {
+                                    z?.TrySetCanceled();
+                                }
+                            }
                         }
                         else
                         {
@@ -644,6 +657,10 @@ public class MouseClickTool : Form
                         await Task.WhenAny(Task.Delay(tg), z?.Task);
                     }
 
+                    using var logWriter = CreateLogWriter(z != null && !z.Task.IsCanceled && r9 && runAsScript && scriptArr != null);
+                    var logCount = 0;
+                    var logTick = Environment.TickCount;
+                    var uiTick = Environment.TickCount;
                     for (ulong count = 0; z != null && !z.Task.IsCanceled && (unrestricted || count < total || longPress); count++)
                     {
                         if (runAsScript)
@@ -694,11 +711,18 @@ public class MouseClickTool : Form
                                         }
                                     }
 
-                                    if (r9)
+                                    if (logWriter != null)
                                     {
                                         try
                                         {
-                                            File.AppendAllText("MouseClickTool.LOG", $"[{DateTime.Now}] {eventType} {scriptCommand}${Environment.NewLine}");
+                                            logWriter.WriteLine($"[{DateTime.Now}] {eventType} {scriptCommand}$");
+                                            var tick = Environment.TickCount;
+                                            if (++logCount >= 100 || tick - logTick >= 1000)
+                                            {
+                                                logWriter.Flush();
+                                                logCount = 0;
+                                                logTick = tick;
+                                            }
                                         }
                                         catch
                                         {
@@ -751,7 +775,11 @@ public class MouseClickTool : Form
 
                                             break;
                                         case "create_process":
-                                            CreateProcess("cmd.exe", $"/c {scriptCommand}");
+                                            if (TryParseProcessCommand(scriptCommand, out string fileName, out string? processArgs))
+                                            {
+                                                CreateProcess(fileName, processArgs, false);
+                                            }
+
                                             continue;
                                         case "title":
                                             Invoke((MethodInvoker)(() =>
@@ -786,7 +814,7 @@ public class MouseClickTool : Form
                         }
                         else if (runMode == 1)
                         {
-                            CreateProcess("cmd.exe", $"/c \"{c1.Text}\"");
+                            CreateProcess(c1.Text.Trim(), null, false);
                             break;
                         }
                         else
@@ -801,14 +829,20 @@ public class MouseClickTool : Form
                             {
                                 m.mi.dwFlags = upFlag;
                                 SendInput(size);
-                                Invoke(() =>
+                                if (!unrestricted)
                                 {
-                                    if (e0.Visible)
+                                    var remaining = total - count - 1;
+                                    var tick = Environment.TickCount;
+                                    if (remaining == 0 || tick - uiTick >= 100)
                                     {
-                                        e0.Text = $"{lang[25]}: {total - count - 1}";
-                                        e0.Left = Width - e0.Width - 12;
+                                        uiTick = tick;
+                                        Invoke(() =>
+                                        {
+                                            e0.Text = $"{lang[25]}: {remaining}";
+                                            e0.Left = Width - e0.Width - 12;
+                                        });
                                     }
-                                });
+                                }
                             }
                             else
                             {
@@ -902,9 +936,88 @@ public class MouseClickTool : Form
         }
     }
 
-    private static void CreateProcess(string path, string? args)
+    private static void CreateProcess(string path, string? args, bool useShellExecute = true)
     {
-        Task.Run(() => System.Diagnostics.Process.Start(path, args));
+        Task.Run(() => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = path,
+            Arguments = args ?? string.Empty,
+            UseShellExecute = useShellExecute,
+        }));
+    }
+
+    private static bool HasCreateProcessCommand(string[] script)
+    {
+        foreach (var line in script)
+        {
+            var value = line.Trim();
+            if (value.StartsWith("#"))
+            {
+                continue;
+            }
+
+            var index = value.IndexOf('(');
+            if (index > 0 && value.Substring(0, index).Trim().Equals("create_process", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryParseProcessCommand(string command, out string fileName, out string? args)
+    {
+        command = command.Trim();
+        fileName = string.Empty;
+        args = null;
+        if (command.Length == 0)
+        {
+            return false;
+        }
+
+        if (command[0] == '"')
+        {
+            var quote = command.IndexOf('"', 1);
+            if (quote < 0)
+            {
+                return false;
+            }
+
+            fileName = command.Substring(1, quote - 1);
+            args = command.Substring(quote + 1).Trim();
+        }
+        else
+        {
+            var separator = command.IndexOf(' ');
+            if (separator < 0)
+            {
+                fileName = command;
+            }
+            else
+            {
+                fileName = command.Substring(0, separator);
+                args = command.Substring(separator + 1).Trim();
+            }
+        }
+
+        return fileName.Length > 0;
+    }
+
+    private static StreamWriter? CreateLogWriter(bool enabled)
+    {
+        if (enabled)
+        {
+            try
+            {
+                return new("MouseClickTool.LOG", true);
+            }
+            catch
+            {
+            }
+        }
+
+        return null;
     }
 
     private static int HeightDiff(int h0, int h1)

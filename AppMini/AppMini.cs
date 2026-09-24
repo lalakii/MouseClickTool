@@ -1,18 +1,10 @@
 ﻿// main.
+using System.Reflection;
+
+var entryAssembly = Assembly.GetEntryAssembly();
+using Stream assemblyStream = entryAssembly?.GetManifestResourceStream("MouseClickTool.dll") ?? throw new InvalidOperationException("Embedded MouseClickTool assembly was not found.");
+using MemoryStream assemblyBytes = new();
+assemblyStream.CopyTo(assemblyBytes);
 Thread.CurrentThread.SetApartmentState(ApartmentState.Unknown);
 Thread.CurrentThread.SetApartmentState(ApartmentState.STA);
-var p = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"MouseClickTool_AnyCPU.dll");
-try
-{
-    if (!File.Exists(p) || (DateTime.UtcNow - File.GetLastWriteTime(p)).TotalDays > 30)
-    {
-        using System.Net.WebClient w = new();
-        w.DownloadFile("https://fastly.jsdelivr.net/gh/lalakii/MouseClickTool/App/MouseClickTool.dll", p);
-    }
-
-    System.Reflection.Assembly.Load(File.ReadAllBytes(p)).CreateInstance("MouseClickTool");
-}
-catch
-{
-    File.Delete(p);
-}
+Assembly.Load(assemblyBytes.ToArray()).CreateInstance("MouseClickTool");
